@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E-Absensi SDK Kuaputu</title>
+  <title>E-Absensi SDK Kuapuatu</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@
         <div class="w-20 h-20 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/20 rotate-3">
           <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
         </div>
-        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">SDK Kuaputu</h1>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">SDK Kuapuatu</h1>
         <p class="text-slate-500 mt-2 font-medium">Sistem Informasi Absensi Terpadu</p>
       </div>
 
@@ -43,6 +43,10 @@
           Masuk ke Dashboard
         </button>
         <p id="login-msg" class="text-center text-red-500 font-medium text-sm hidden">Data tidak ditemukan!</p>
+      </div>
+      
+      <div class="mt-12 text-center">
+        <p class="text-slate-400 text-xs font-medium">© 2024 SDK Kuapuatu Mobile v2.0</p>
       </div>
     </div>
 
@@ -229,12 +233,9 @@
       }
     }
 
-    // FUNGSI ANTI-CACHE (Penting untuk Laptop Browser)
     async function fetchDatabase() {
       try {
-        // Menambahkan timestamp agar URL selalu unik dan browser terpaksa memuat data asli, BUKAN dari cache lokal
         const antiCacheUrl = GOOGLE_SCRIPT_URL + "?nocache=" + new Date().getTime();
-        
         const response = await fetch(antiCacheUrl);
         const rawData = await response.json();
         
@@ -260,7 +261,7 @@
     function logout() {
       currentUser = null;
       document.getElementById('login-id').value = '';
-      globalDatabase = []; // Bersihkan data memori saat logout
+      globalDatabase = []; 
       showPage('page-login');
     }
 
@@ -289,7 +290,6 @@
       const actionSuccess = document.getElementById('action-success');
       const userRoleDisplay = document.getElementById('user-role');
 
-      // Setingan Profil Bawaan
       let roleText = currentUser.role === 'pegawai' ? 'PEGAWAI' : 'GURU';
 
       if (hasAbsen) {
@@ -297,23 +297,29 @@
         badge.textContent = hasAbsen.status;
         badge.className = `px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-emerald-100 text-emerald-700`;
         
-        // Ubah Profil Atas!
         userRoleDisplay.textContent = `${roleText} • SUDAH ABSEN (${hasAbsen.status})`;
         userRoleDisplay.className = "text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 mt-1 inline-block";
 
         actionButtons.classList.add('hidden');
         actionSuccess.classList.remove('hidden');
       } else {
-        // JIKA BELUM ABSEN
+        // JIKA BELUM ABSEN - KITA RESET & NYALAKAN KEMBALI TOMBOLNYA
         badge.textContent = "Belum Absen";
         badge.className = "px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500";
         
-        // Profil Atas Normal
         userRoleDisplay.textContent = roleText;
         userRoleDisplay.className = "text-xs font-bold text-slate-500 mt-1 block";
 
-        actionButtons.classList.remove('hidden');
+        // Pastikan kelas 'opacity-50' dan 'pointer-events-none' terhapus jika sebelumnya sempat error atau ter-cache
+        actionButtons.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
         actionSuccess.classList.add('hidden');
+        
+        // Reset juga tulisan di dalam tombolnya kembali seperti semula
+        document.getElementById('btn-hadir').innerHTML = `
+          <i data-lucide="check-circle" class="w-8 h-8 text-white/70 mb-2"></i>
+          <h3 class="text-white font-bold text-xl">Hadir Sekarang</h3>
+          <p class="text-emerald-50 text-xs font-medium mt-1">Klik untuk konfirmasi kehadiran</p>
+        `;
       }
 
       // Render History
