@@ -253,6 +253,30 @@
 
         await fetchDatabase();
 
+        // JIKA KEPALA SEKOLAH LOGIN, OTOMATIS ISIKAN ABSEN KEHADIRAN HARI INI
+        if (user.role === 'kepsek') {
+          const today = getTodayString();
+          const hasAbsen = globalDatabase.find(a => String(a.id_user) === String(user.id) && a.date === today);
+          
+          if (!hasAbsen) {
+            msg.innerHTML = '<span class="animate-pulse">Mencatat kehadiran Kepala Sekolah...</span>';
+            const newAbsen = { 
+              id_user: String(user.id), 
+              name: user.name, 
+              date: today, 
+              time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), 
+              status: 'HADIR', 
+              note: 'Otomatis Sistem (Login)' 
+            };
+            try {
+              await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(newAbsen) });
+              globalDatabase.push(newAbsen);
+            } catch(e) {
+              console.error("Gagal kirim absen otomatis kepsek", e);
+            }
+          }
+        }
+
         msg.classList.add('hidden');
         msg.classList.replace('text-blue-500', 'text-red-500');
         btn.disabled = false;
@@ -261,6 +285,9 @@
         if (user.role === 'admin' || user.role === 'kepsek') {
           showPage('page-admin');
           renderAdminDashboard();
+          if (user.role === 'kepsek') {
+            alert('Selamat Datang, Ibu Kepala Sekolah.\nKehadiran Anda hari ini telah berhasil disimpan secara otomatis.');
+          }
         } else {
           showPage('page-guru');
           renderGuruDashboard();
@@ -389,15 +416,14 @@
 
     // === HALAMAN ADMIN / KEPALA SEKOLAH DESKTOP ===
     function renderAdminDashboard() {
-      // Atur Nama & Role di Header Dashboard
       if (currentUser.role === 'kepsek') {
         document.getElementById('admin-name').textContent = currentUser.name;
         document.getElementById('admin-subrole').textContent = "Kepala Sekolah Dashboard";
-        document.getElementById('btn-reset').classList.add('hidden'); // Sembunyikan tombol reset untuk kepsek
+        document.getElementById('btn-reset').classList.add('hidden'); 
       } else {
         document.getElementById('admin-name').textContent = "Panel Admin";
         document.getElementById('admin-subrole').textContent = "Administrator System";
-        document.getElementById('btn-reset').classList.remove('hidden'); // Tampilkan tombol reset untuk admin
+        document.getElementById('btn-reset').classList.remove('hidden'); 
       }
 
       const today = getTodayString();
