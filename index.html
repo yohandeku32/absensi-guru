@@ -35,6 +35,7 @@
             <label class="text-xs font-bold text-emerald-600 uppercase tracking-wider ml-1">Masuk Sebagai</label>
             <select id="login-role" class="w-full mt-1.5 px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none appearance-none font-medium shadow-sm">
               <option value="guru">Guru / Pegawai</option>
+              <option value="kepsek">Kepala Sekolah</option>
               <option value="admin">Administrator</option>
             </select>
           </div>
@@ -121,7 +122,7 @@
             </div>
             <div>
               <h2 id="admin-name" class="text-xl font-black text-slate-900 leading-tight">Panel Admin</h2>
-              <p class="text-sm font-bold text-emerald-600">Administrator System</p>
+              <p id="admin-subrole" class="text-sm font-bold text-emerald-600">Administrator System</p>
             </div>
           </div>
           <button onclick="logout()" class="px-6 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold flex items-center justify-center gap-2 transition-colors">
@@ -147,11 +148,11 @@
             </div>
 
             <div class="bg-white p-6 rounded-[2rem] shadow-lg shadow-slate-200/40 border border-slate-100 space-y-3">
-              <h3 class="font-bold text-slate-400 uppercase tracking-wider text-xs mb-4">Aksi Administrator</h3>
+              <h3 class="font-bold text-slate-400 uppercase tracking-wider text-xs mb-4">Aksi Manajemen</h3>
               <button onclick="exportToExcel()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-all">
                 <i data-lucide="download" class="w-5 h-5"></i> Unduh Excel (CSV)
               </button>
-              <button onclick="resetData()" id="btn-reset" class="w-full py-4 bg-red-50 hover:bg-red-500 hover:text-white text-red-600 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all border border-red-100 hover:border-red-500 group">
+              <button onclick="resetData()" id="btn-reset" class="w-full py-4 bg-red-50 hover:bg-red-500 hover:text-white text-red-600 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all border border-red-100 hover:border-red-500 group hidden">
                 <i data-lucide="trash-2" class="w-5 h-5 group-hover:animate-bounce"></i> Reset Semua Data
               </button>
             </div>
@@ -181,7 +182,7 @@
                   </tr>
                 </thead>
                 <tbody id="admin-table-body" class="divide-y divide-slate-200 bg-white">
-                  </tbody>
+                </tbody>
               </table>
             </div>
           </div>
@@ -211,7 +212,7 @@
     // DATA MASTER
     const MASTER_USERS = [
       { id: 'admin', name: 'Wilhelmina Kasih, S.Ag,S.Pd', role: 'admin' },
-      { id: '100', name: 'Wilhelmina Kasih, S.Ag,S.Pd', role: 'Kepala Sekolah' },
+      { id: '100', name: 'Wilhelmina Kasih, S.Ag,S.Pd', role: 'kepsek' },
       { id: '101', name: 'Ambrosius Sina, S.Pd', role: 'guru' },
       { id: '102', name: 'Trifosa Rabe, S.Pd', role: 'guru' },
       { id: '103', name: 'Priska Oni, S.Pd', role: 'guru' },
@@ -239,7 +240,7 @@
       const msg = document.getElementById('login-msg');
       const btn = document.getElementById('btn-login');
 
-      const user = MASTER_USERS.find(u => String(u.id) === String(id) && (role === 'admin' ? u.role === 'admin' : u.role !== 'admin'));
+      const user = MASTER_USERS.find(u => String(u.id) === String(id) && u.role === role);
 
       if (user) {
         currentUser = user;
@@ -257,7 +258,7 @@
         btn.disabled = false;
         btn.classList.remove('opacity-70');
 
-        if (user.role === 'admin') {
+        if (user.role === 'admin' || user.role === 'kepsek') {
           showPage('page-admin');
           renderAdminDashboard();
         } else {
@@ -266,7 +267,7 @@
         }
       } else {
         msg.classList.remove('hidden');
-        msg.textContent = 'Data tidak ditemukan!';
+        msg.textContent = 'Data tidak ditemukan atau Hak Akses salah!';
       }
     }
 
@@ -278,7 +279,6 @@
         
         globalDatabase = rawData.map(row => {
           let cleanDate = row.date;
-          // Standarisasi jika format tanggal berupa ISO String dari server
           if (cleanDate && typeof cleanDate === 'string' && cleanDate.includes('T')) {
             const d = new Date(cleanDate);
             cleanDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -387,8 +387,19 @@
     function closeNote() { document.getElementById('modal-note').classList.add('hidden'); document.getElementById('note-text').value = ''; }
     function confirmAbsenWithNote() { const note = document.getElementById('note-text').value.trim(); submitAbsen(pendingStatus, note); closeNote(); }
 
-    // === HALAMAN ADMIN DESKTOP ===
+    // === HALAMAN ADMIN / KEPALA SEKOLAH DESKTOP ===
     function renderAdminDashboard() {
+      // Atur Nama & Role di Header Dashboard
+      if (currentUser.role === 'kepsek') {
+        document.getElementById('admin-name').textContent = currentUser.name;
+        document.getElementById('admin-subrole').textContent = "Kepala Sekolah Dashboard";
+        document.getElementById('btn-reset').classList.add('hidden'); // Sembunyikan tombol reset untuk kepsek
+      } else {
+        document.getElementById('admin-name').textContent = "Panel Admin";
+        document.getElementById('admin-subrole').textContent = "Administrator System";
+        document.getElementById('btn-reset').classList.remove('hidden'); // Tampilkan tombol reset untuk admin
+      }
+
       const today = getTodayString();
       const hariIni = globalDatabase.filter(a => a.date === today && a.status === 'HADIR');
       
@@ -428,8 +439,9 @@
       lucide.createIcons();
     }
 
-    // FUNGSI RESET DATA SERVER
+    // FUNGSI RESET DATA SERVER (Hanya Admin)
     async function resetData() {
+      if (currentUser.role !== 'admin') return;
       if(!confirm('PERINGATAN KERAS!\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA absensi di server Google Sheets secara permanen?\n\nGuru harus absen ulang setelah ini.')) return;
 
       const btn = document.getElementById('btn-reset');
