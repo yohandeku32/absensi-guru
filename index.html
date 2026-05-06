@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E-Absensi SDK Kuapuatu</title>
+  <title>E-Absensi SDK St.Yoseph Kuaputu</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
           <div class="w-20 h-20 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/20 rotate-3">
             <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
           </div>
-          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">SDK Kuapuatu</h1>
+          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">SDK St. Yoseph Kuaputu</h1>
           <p class="text-slate-500 mt-2 font-medium">Sistem Informasi Absensi</p>
         </div>
 
@@ -45,7 +45,7 @@
           <button id="btn-login" onclick="handleLogin()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-500/30 active:scale-[0.98] mt-4 flex justify-center items-center gap-2">
             Masuk Sekarang
           </button>
-          <p id="login-msg" class="text-center text-red-500 font-medium text-sm hidden">Data tidak ditemukan!</p>
+          <p id="login-msg" class="text-center text-red-500 font-medium text-sm hidden">Data Salah</p>
         </div>
       </div>
     </div>
@@ -104,7 +104,7 @@
 
           <div class="space-y-4 pt-4 border-t border-slate-100">
             <h3 class="font-bold text-slate-800 flex items-center gap-2">
-              <i data-lucide="history" class="w-5 h-5 text-emerald-500"></i> Riwayat di Server
+              <i data-lucide="history" class="w-5 h-5 text-emerald-500"></i> Riwayat Absen
             </h3>
             <div id="guru-history-list" class="space-y-3"></div>
           </div>
@@ -141,7 +141,7 @@
                   <p id="stat-hadir" class="text-4xl font-black text-emerald-700 mt-1">0</p>
                 </div>
                 <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl">
-                  <p class="text-xs text-slate-500 font-bold uppercase tracking-wide">Total Data Server</p>
+                  <p class="text-xs text-slate-500 font-bold uppercase tracking-wide">Total Data Guru </p>
                   <p id="stat-total" class="text-4xl font-black text-slate-800 mt-1">0</p>
                 </div>
               </div>
@@ -161,8 +161,8 @@
           <div class="lg:col-span-3 bg-white p-6 sm:p-8 rounded-[2rem] shadow-lg shadow-slate-200/40 border border-slate-100 flex flex-col h-[700px]">
             <div class="flex justify-between items-center mb-6">
               <div>
-                <h3 class="font-black text-slate-800 text-xl">Data Kehadiran Server</h3>
-                <p class="text-sm text-slate-500 font-medium">Rekapitulasi otomatis dari Google Sheets</p>
+                <h3 class="font-black text-slate-800 text-xl">Data Kehadiran Guru </h3>
+                <p class="text-sm text-slate-500 font-medium">Rekapitulasi otomatis </p>
               </div>
               <button onclick="refreshAdmin(event)" class="text-sm text-blue-600 font-bold bg-blue-50 px-4 py-2.5 rounded-xl hover:bg-blue-100 transition-colors flex items-center gap-2">
                 <i data-lucide="refresh-cw" class="w-4 h-4"></i> Segarkan Data
