@@ -144,7 +144,7 @@
         <div class="space-y-4">
           <div class="flex justify-between items-center">
             <h3 class="font-bold text-slate-800">Semua Absensi Terbaru</h3>
-            <button onclick="refreshAdmin(event)" class="text-[10px] text-blue-500 font-bold uppercase tracking-widest hover:text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg">Refresh Data</button>
+            <button onclick="refreshAdmin(event)" class="text-[10px] text-blue-500 font-bold uppercase tracking-widest hover:text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">Refresh Data</button>
           </div>
           <div id="admin-list" class="space-y-3">
             </div>
@@ -195,14 +195,14 @@
     let pendingStatus = '';
     let globalDatabase = []; 
 
-    // Helper untuk mendapatkan tanggal yang rapi dan konsisten (Format: DD-MM-YYYY)
-    // Supaya tidak terpengaruh perbedaan zona waktu atau browser
+    // === PERBAIKAN 1: STANDARISASI FORMAT TANGGAL ===
+    // Memaksa format tanggal menjadi YYYY-MM-DD agar stabil saat dicocokkan
     function getTodayString() {
       const d = new Date();
-      return `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getFullYear()}`;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
-    // === LOGIKA LOGIN ===
+    // === LOGIKA LOGIN & TARIK DATA ===
     async function handleLogin() {
       const role = document.getElementById('login-role').value;
       const id = document.getElementById('login-id').value.trim();
@@ -214,14 +214,12 @@
       if (user) {
         currentUser = user;
         
-        // Mode Loading
         msg.classList.remove('hidden');
         msg.classList.replace('text-red-500', 'text-blue-500');
         msg.innerHTML = '<span class="animate-pulse">Sinkronisasi data dengan server...</span>';
         btn.disabled = true;
         btn.classList.add('opacity-70');
 
-        // Tarik data
         await fetchDatabase();
 
         msg.classList.add('hidden');
@@ -245,10 +243,18 @@
     async function fetchDatabase() {
       try {
         const response = await fetch(GOOGLE_SCRIPT_URL);
-        globalDatabase = await response.json();
+        const rawData = await response.json();
+        
+        // Membersihkan format tanggal berantakan dari Google Sheets saat ditarik
+        globalDatabase = rawData.map(row => {
+          let cleanDate = row.date;
+          if (cleanDate && cleanDate.includes('T')) {
+            cleanDate = cleanDate.split('T')[0]; // Ubah "2026-05-06T15:00:00.000Z" jadi "2026-05-06"
+          }
+          return { ...row, date: cleanDate };
+        });
       } catch (error) {
-        alert('Gagal terhubung ke server Google Sheets. Pastikan internet Anda stabil.');
-        console.error(error);
+        console.error("Gagal terhubung:", error);
       }
     }
 
@@ -270,11 +276,11 @@
       document.getElementById('user-role').textContent = currentUser.role === 'pegawai' ? 'PEGAWAI' : 'GURU';
       
       const now = new Date();
-      document.getElementById('current-date').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
+      document.getElementById('current-date').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(now);
       
       const today = getTodayString();
       
-      // LOGIKA ANTI DOBEL: Cek apakah data user hari ini sudah ada di globalDatabase
+      // Mencegah Tombol Muncul 2 Kali
       const hasAbsen = globalDatabase.find(a => a.id_user === currentUser.id && a.date === today);
 
       const badge = document.getElementById('status-badge');
@@ -282,25 +288,19 @@
       const actionSuccess = document.getElementById('action-success');
 
       if (hasAbsen) {
-        // JIKA SUDAH ABSEN: Sembunyikan tombol, munculkan tulisan sukses
         badge.textContent = hasAbsen.status;
         badge.className = `px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-100 ${getStatusColor(hasAbsen.status)}`;
-        actionButtons.classList.add('hidden');
-        actionSuccess.classList.remove('hidden');
+        actionButtons.classList.add('hidden'); // Sembunyikan Tombol
+        actionSuccess.classList.remove('hidden'); // Tampilkan Sukses
       } else {
-        // JIKA BELUM ABSEN: Munculkan tombol, sembunyikan tulisan sukses
         badge.textContent = "Belum Absen";
         badge.className = "px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500";
-        actionButtons.classList.remove('hidden');
-        actionSuccess.classList.add('hidden');
+        actionButtons.classList.remove('hidden'); // Tampilkan Tombol
+        actionSuccess.classList.add('hidden'); // Sembunyikan Sukses
       }
 
       // Render Riwayat
-      const history = globalDatabase.filter(a => a.id_user === currentUser.id).sort((a,b) => {
-         // Sort sederhana dari data terbaru
-         return new Date(b.date.split('-').reverse().join('-')) - new Date(a.date.split('-').reverse().join('-'));
-      });
-      
+      const history = globalDatabase.filter(a => a.id_user === currentUser.id).sort((a,b) => new Date(b.date) - new Date(a.date));
       const list = document.getElementById('guru-history-list');
       list.innerHTML = history.length ? '' : '<p class="text-slate-400 text-center py-6 font-medium text-sm">Belum ada riwayat di server</p>';
       
@@ -308,7 +308,7 @@
         list.innerHTML += `
           <div class="bg-white p-4 rounded-2xl flex items-center justify-between border border-slate-100 shadow-sm">
             <div>
-              <p class="text-slate-800 font-bold text-sm">${h.date.replace(/-/g, '/')}</p>
+              <p class="text-slate-800 font-bold text-sm">${formatShortDate(h.date)}</p>
               <p class="text-slate-500 font-medium text-[11px] mt-0.5">${h.time} ${h.note ? '• ' + h.note : ''}</p>
             </div>
             <span class="text-[10px] font-black bg-slate-50 px-2.5 py-1 rounded-lg ${getStatusColor(h.status)}">${h.status}</span>
@@ -318,46 +318,49 @@
       lucide.createIcons();
     }
 
-    // === LOGIKA KIRIM DATA ABSEN ===
+    // === PERBAIKAN 2: LOGIKA KIRIM DATA YANG TIDAK BISA DITEMBUS ===
     async function submitAbsen(status, note = '') {
       const today = getTodayString();
       
-      // Keamanan ganda: Cegah eksekusi jika sudah absen
+      // Kunci Keamanan 1: Jika memang sudah absen, hentikan fungsi ini
       const existing = globalDatabase.find(a => a.id_user === currentUser.id && a.date === today);
       if (existing) return;
 
       const newAbsen = {
         id_user: currentUser.id,
         name: currentUser.name,
-        date: today, // Gunakan format string yang konsisten
+        date: today,
         time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
         status: status,
         note: note
       };
 
-      // Buat tombol jadi mode "Menyimpan" agar tidak diklik berkali-kali
-      document.getElementById('action-buttons').classList.add('opacity-50', 'pointer-events-none');
-      document.getElementById('btn-hadir').innerHTML = `<p class="text-white font-bold animate-pulse text-center">Menyimpan ke server...</p>`;
+      // Kunci Keamanan 2: Matikan tombol secara visual saat sedang Loading agar tidak bisa ditekan 2x
+      const actionButtons = document.getElementById('action-buttons');
+      const btnHadir = document.getElementById('btn-hadir');
+      const originalHTML = btnHadir.innerHTML;
+      
+      actionButtons.classList.add('opacity-50', 'pointer-events-none');
+      btnHadir.innerHTML = `<p class="text-white font-bold animate-pulse text-center py-2">Menyimpan ke server...</p>`;
 
       try {
-        // Kirim data ke Google Sheets
+        // PERBAIKAN 3: Mode 'no-cors' agar data pasti terkirim walau terhalang Firewall Browser
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
+          mode: 'no-cors',
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(newAbsen)
         });
         
-        // OPTIMISTIC UPDATE: Langsung masukkan data ke memori lokal tanpa harus tarik ulang dari Sheets
-        // Ini memastikan profil pengguna INSTAN berubah jadi "Sudah Absen"
+        // Memasukkan data langsung ke sistem agar profil seketika berubah
         globalDatabase.push(newAbsen);
-        renderGuruDashboard();
-
+        renderGuruDashboard(); 
+        
       } catch(err) {
         alert('Gagal mengirim data! Pastikan internet Anda aktif.');
-      } finally {
-        // Kembalikan tampilan tombol jika suatu saat error
-        document.getElementById('action-buttons').classList.remove('opacity-50', 'pointer-events-none');
-        document.getElementById('btn-hadir').innerHTML = `<i data-lucide="check-circle" class="w-8 h-8 text-white/70 mb-2"></i><h3 class="text-white font-bold text-xl">Hadir Sekarang</h3><p class="text-emerald-50 text-xs font-medium mt-1">Klik untuk konfirmasi kehadiran</p>`;
+        // Jika gagal, kembalikan tombol seperti semula agar bisa ditekan ulang
+        actionButtons.classList.remove('opacity-50', 'pointer-events-none');
+        btnHadir.innerHTML = originalHTML;
         lucide.createIcons();
       }
     }
@@ -392,7 +395,6 @@
       const list = document.getElementById('admin-list');
       list.innerHTML = '';
       
-      // Mengurutkan dari yang paling baru
       const sortedDb = [...globalDatabase].reverse();
 
       if(sortedDb.length === 0) {
@@ -404,7 +406,7 @@
           <div class="bg-white p-4 rounded-xl flex items-center justify-between border border-slate-100 shadow-sm">
             <div>
               <p class="text-sm font-bold text-slate-800">${a.name}</p>
-              <p class="text-[11px] font-medium text-slate-500 mt-0.5">${a.date.replace(/-/g, '/')} • Pukul ${a.time}</p>
+              <p class="text-[11px] font-medium text-slate-500 mt-0.5">${formatShortDate(a.date)} • Pukul ${a.time}</p>
             </div>
             <div class="text-right">
               <p class="text-[10px] font-black ${getStatusColor(a.status)}">${a.status}</p>
@@ -418,7 +420,7 @@
     async function refreshAdmin(event) {
       const btn = event.target;
       const textLama = btn.textContent;
-      btn.textContent = "Loading...";
+      btn.textContent = "Memuat...";
       await fetchDatabase();
       renderAdminDashboard();
       btn.textContent = textLama;
@@ -464,6 +466,14 @@
       if(s === 'SAKIT') return 'text-blue-600';
       if(s === 'IZIN') return 'text-amber-600';
       return 'text-slate-500';
+    }
+
+    function formatShortDate(dateStr) {
+      // Mengubah format YYYY-MM-DD menjadi format cantik untuk UI
+      if(!dateStr) return '';
+      const d = new Date(dateStr);
+      if(isNaN(d.getTime())) return dateStr; 
+      return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
     }
 
     lucide.createIcons();
