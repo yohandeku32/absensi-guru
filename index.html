@@ -172,7 +172,7 @@
 
   <script>
     // ==========================================
-    // URL DATABASE GOOGLE SHEETS
+    // URL DATABASE GOOGLE SHEETS ANDA
     // ==========================================
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6Sf4Fh-OGRuKBDPd8nnnkm4fxNvgeqUN64azYPUIn32CEwbmqlx8SeIqc4lfUjNr_/exec";
 
@@ -195,14 +195,14 @@
     let pendingStatus = '';
     let globalDatabase = []; 
 
-    // === PERBAIKAN 1: STANDARISASI FORMAT TANGGAL ===
-    // Memaksa format tanggal menjadi YYYY-MM-DD agar stabil saat dicocokkan
+    // === PERBAIKAN 1: MENGUNCI FORMAT TANGGAL ===
+    // Selalu paksa format "YYYY-MM-DD" agar tidak bingung beda bahasa/perangkat
     function getTodayString() {
       const d = new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
-    // === LOGIKA LOGIN & TARIK DATA ===
+    // === LOGIKA LOGIN ===
     async function handleLogin() {
       const role = document.getElementById('login-role').value;
       const id = document.getElementById('login-id').value.trim();
@@ -240,16 +240,20 @@
       }
     }
 
+    // === PERBAIKAN 2: KONVERSI ZONA WAKTU SAAT MENARIK DATA ===
     async function fetchDatabase() {
       try {
         const response = await fetch(GOOGLE_SCRIPT_URL);
         const rawData = await response.json();
         
-        // Membersihkan format tanggal berantakan dari Google Sheets saat ditarik
         globalDatabase = rawData.map(row => {
           let cleanDate = row.date;
-          if (cleanDate && cleanDate.includes('T')) {
-            cleanDate = cleanDate.split('T')[0]; // Ubah "2026-05-06T15:00:00.000Z" jadi "2026-05-06"
+          // Memecahkan bug UTC Timezone dari Google Sheets!
+          // Jika format dari server adalah "2026-05-05T16:00:00.000Z" (ISO)
+          if (cleanDate && typeof cleanDate === 'string' && cleanDate.includes('T')) {
+            const d = new Date(cleanDate);
+            // new Date() akan otomatis menerjemahkannya ke zona waktu WITA / WIB di HP kita
+            cleanDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
           }
           return { ...row, date: cleanDate };
         });
@@ -280,8 +284,25 @@
       
       const today = getTodayString();
       
-      // Mencegah Tombol Muncul 2 Kali
-      const hasAbsen = globalDatabase.find(a => a.id_user === currentUser.id && a.date === today);
+      // === PERBAIKAN 3: LOGIKA ANTI DOBEL ABSEN DIPERKUAT ===
+      // Akan mengunci status jika tanggal YYYY-MM-DD hari ini COCOK dengan yang ada di server
+      const hasAbsen = globalDatabase.find(a => {
+        if (a.id_user !== currentUser.id) return false;
+        
+        // Pengecekan 1: Samakan text langsung
+        if (a.date === today) return true;
+        
+        // Pengecekan 2: Backup kalau Google sheet ngubah formatnya (misal jadi 05/06/2026)
+        try {
+          const d = new Date(a.date);
+          if (!isNaN(d.getTime())) {
+            const fallbackDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            if (fallbackDate === today) return true;
+          }
+        } catch(e) {}
+        
+        return false;
+      });
 
       const badge = document.getElementById('status-badge');
       const actionButtons = document.getElementById('action-buttons');
@@ -290,12 +311,12 @@
       if (hasAbsen) {
         badge.textContent = hasAbsen.status;
         badge.className = `px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-100 ${getStatusColor(hasAbsen.status)}`;
-        actionButtons.classList.add('hidden'); // Sembunyikan Tombol
-        actionSuccess.classList.remove('hidden'); // Tampilkan Sukses
+        actionButtons.classList.add('hidden'); // Hilangkan Tombol secara permanen
+        actionSuccess.classList.remove('hidden'); // Munculkan Sukses
       } else {
         badge.textContent = "Belum Absen";
         badge.className = "px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500";
-        actionButtons.classList.remove('hidden'); // Tampilkan Tombol
+        actionButtons.classList.remove('hidden'); // Munculkan Tombol
         actionSuccess.classList.add('hidden'); // Sembunyikan Sukses
       }
 
@@ -318,11 +339,10 @@
       lucide.createIcons();
     }
 
-    // === PERBAIKAN 2: LOGIKA KIRIM DATA YANG TIDAK BISA DITEMBUS ===
     async function submitAbsen(status, note = '') {
       const today = getTodayString();
       
-      // Kunci Keamanan 1: Jika memang sudah absen, hentikan fungsi ini
+      // Keamanan Lapis 1
       const existing = globalDatabase.find(a => a.id_user === currentUser.id && a.date === today);
       if (existing) return;
 
@@ -335,7 +355,7 @@
         note: note
       };
 
-      // Kunci Keamanan 2: Matikan tombol secara visual saat sedang Loading agar tidak bisa ditekan 2x
+      // Keamanan Lapis 2: Matikan tombol pas ditekan agar tidak klik ganda
       const actionButtons = document.getElementById('action-buttons');
       const btnHadir = document.getElementById('btn-hadir');
       const originalHTML = btnHadir.innerHTML;
@@ -344,7 +364,6 @@
       btnHadir.innerHTML = `<p class="text-white font-bold animate-pulse text-center py-2">Menyimpan ke server...</p>`;
 
       try {
-        // PERBAIKAN 3: Mode 'no-cors' agar data pasti terkirim walau terhalang Firewall Browser
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           mode: 'no-cors',
@@ -352,13 +371,12 @@
           body: JSON.stringify(newAbsen)
         });
         
-        // Memasukkan data langsung ke sistem agar profil seketika berubah
+        // Push langsung ke memori HP agar tampilan otomatis terkunci
         globalDatabase.push(newAbsen);
         renderGuruDashboard(); 
         
       } catch(err) {
         alert('Gagal mengirim data! Pastikan internet Anda aktif.');
-        // Jika gagal, kembalikan tombol seperti semula agar bisa ditekan ulang
         actionButtons.classList.remove('opacity-50', 'pointer-events-none');
         btnHadir.innerHTML = originalHTML;
         lucide.createIcons();
@@ -387,7 +405,17 @@
       document.getElementById('admin-name').textContent = currentUser.name;
 
       const today = getTodayString();
-      const hariIni = globalDatabase.filter(a => a.date === today && a.status === 'HADIR');
+      const hariIni = globalDatabase.filter(a => {
+        // Toleransi format yang sama dengan guru
+        if (a.date === today) return true;
+        try {
+          const d = new Date(a.date);
+          if (!isNaN(d.getTime())) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` === today;
+          }
+        } catch(e) {}
+        return false;
+      }).filter(a => a.status === 'HADIR');
       
       document.getElementById('stat-hadir').textContent = hariIni.length;
       document.getElementById('stat-total').textContent = globalDatabase.length;
@@ -437,10 +465,17 @@
       csvRows.push(header.join(","));
 
       for (const row of globalDatabase) {
+        // Supaya Excel di PC tidak salah terjemahin tanggal
+        let cleanDate = row.date;
+        try {
+           const d = new Date(row.date);
+           if (!isNaN(d.getTime())) cleanDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        } catch(e){}
+
         const values = [
           row.id_user,
           `"${row.name}"`, 
-          row.date,
+          cleanDate,
           row.time,
           row.status,
           `"${row.note || ''}"`
@@ -469,11 +504,14 @@
     }
 
     function formatShortDate(dateStr) {
-      // Mengubah format YYYY-MM-DD menjadi format cantik untuk UI
       if(!dateStr) return '';
-      const d = new Date(dateStr);
-      if(isNaN(d.getTime())) return dateStr; 
-      return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
+      try {
+        const d = new Date(dateStr);
+        if(isNaN(d.getTime())) return dateStr; 
+        return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
+      } catch(e) {
+        return dateStr;
+      }
     }
 
     lucide.createIcons();
