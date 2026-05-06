@@ -75,7 +75,7 @@
           <div id="status-badge" class="px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500">Belum Absen</div>
         </div>
 
-        <div id="action-buttons" class="grid grid-cols-1 gap-3">
+        <div id="action-buttons" class="grid grid-cols-1 gap-3 hidden">
           <button id="btn-hadir" onclick="submitAbsen('HADIR')" class="group relative overflow-hidden p-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-[2rem] text-left transition-all active:scale-95 shadow-xl shadow-emerald-500/20">
             <i data-lucide="check-circle" class="w-8 h-8 text-white/70 mb-2"></i>
             <h3 class="text-white font-bold text-xl">Hadir Sekarang</h3>
@@ -172,7 +172,7 @@
 
   <script>
     // ==========================================
-    // URL DATABASE GOOGLE SHEETS ANDA
+    // URL DATABASE GOOGLE SHEETS
     // ==========================================
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6Sf4Fh-OGRuKBDPd8nnnkm4fxNvgeqUN64azYPUIn32CEwbmqlx8SeIqc4lfUjNr_/exec";
 
@@ -193,9 +193,16 @@
 
     let currentUser = null;
     let pendingStatus = '';
-    let globalDatabase = []; // Tempat menyimpan data dari server (Google Sheets)
+    let globalDatabase = []; 
 
-    // === CORE LOGIC (ONLINE MODE) ===
+    // Helper untuk mendapatkan tanggal yang rapi dan konsisten (Format: DD-MM-YYYY)
+    // Supaya tidak terpengaruh perbedaan zona waktu atau browser
+    function getTodayString() {
+      const d = new Date();
+      return `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getFullYear()}`;
+    }
+
+    // === LOGIKA LOGIN ===
     async function handleLogin() {
       const role = document.getElementById('login-role').value;
       const id = document.getElementById('login-id').value.trim();
@@ -207,17 +214,16 @@
       if (user) {
         currentUser = user;
         
-        // Mode Loading - Mengambil data
+        // Mode Loading
         msg.classList.remove('hidden');
         msg.classList.replace('text-red-500', 'text-blue-500');
         msg.innerHTML = '<span class="animate-pulse">Sinkronisasi data dengan server...</span>';
         btn.disabled = true;
         btn.classList.add('opacity-70');
 
-        // Tunggu tarikan data online dari Google Sheets
+        // Tarik data
         await fetchDatabase();
 
-        // Kembalikan tombol seperti semula
         msg.classList.add('hidden');
         msg.classList.replace('text-blue-500', 'text-red-500');
         btn.disabled = false;
@@ -258,15 +264,17 @@
       showPage('page-login');
     }
 
-    // === GURU FEATURES ===
+    // === LOGIKA DASHBOARD GURU ===
     function renderGuruDashboard() {
       document.getElementById('user-name').textContent = currentUser.name;
       document.getElementById('user-role').textContent = currentUser.role === 'pegawai' ? 'PEGAWAI' : 'GURU';
-      document.getElementById('current-date').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
       
-      const today = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      document.getElementById('current-date').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
       
-      // Mengecek apakah spesifik "user yang login" sudah absen hari ini di Database Online
+      const today = getTodayString();
+      
+      // LOGIKA ANTI DOBEL: Cek apakah data user hari ini sudah ada di globalDatabase
       const hasAbsen = globalDatabase.find(a => a.id_user === currentUser.id && a.date === today);
 
       const badge = document.getElementById('status-badge');
@@ -274,19 +282,25 @@
       const actionSuccess = document.getElementById('action-success');
 
       if (hasAbsen) {
+        // JIKA SUDAH ABSEN: Sembunyikan tombol, munculkan tulisan sukses
         badge.textContent = hasAbsen.status;
         badge.className = `px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-100 ${getStatusColor(hasAbsen.status)}`;
         actionButtons.classList.add('hidden');
         actionSuccess.classList.remove('hidden');
       } else {
+        // JIKA BELUM ABSEN: Munculkan tombol, sembunyikan tulisan sukses
         badge.textContent = "Belum Absen";
         badge.className = "px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500";
         actionButtons.classList.remove('hidden');
         actionSuccess.classList.add('hidden');
       }
 
-      // History Guru (Hanya menampilkan miliknya sendiri yang diambil dari server)
-      const history = globalDatabase.filter(a => a.id_user === currentUser.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+      // Render Riwayat
+      const history = globalDatabase.filter(a => a.id_user === currentUser.id).sort((a,b) => {
+         // Sort sederhana dari data terbaru
+         return new Date(b.date.split('-').reverse().join('-')) - new Date(a.date.split('-').reverse().join('-'));
+      });
+      
       const list = document.getElementById('guru-history-list');
       list.innerHTML = history.length ? '' : '<p class="text-slate-400 text-center py-6 font-medium text-sm">Belum ada riwayat di server</p>';
       
@@ -294,7 +308,7 @@
         list.innerHTML += `
           <div class="bg-white p-4 rounded-2xl flex items-center justify-between border border-slate-100 shadow-sm">
             <div>
-              <p class="text-slate-800 font-bold text-sm">${formatShortDate(h.date)}</p>
+              <p class="text-slate-800 font-bold text-sm">${h.date.replace(/-/g, '/')}</p>
               <p class="text-slate-500 font-medium text-[11px] mt-0.5">${h.time} ${h.note ? '• ' + h.note : ''}</p>
             </div>
             <span class="text-[10px] font-black bg-slate-50 px-2.5 py-1 rounded-lg ${getStatusColor(h.status)}">${h.status}</span>
@@ -304,40 +318,44 @@
       lucide.createIcons();
     }
 
+    // === LOGIKA KIRIM DATA ABSEN ===
     async function submitAbsen(status, note = '') {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayString();
       
-      // Cegah submit ganda jika tombol tertekan 2 kali
+      // Keamanan ganda: Cegah eksekusi jika sudah absen
       const existing = globalDatabase.find(a => a.id_user === currentUser.id && a.date === today);
       if (existing) return;
 
       const newAbsen = {
         id_user: currentUser.id,
         name: currentUser.name,
-        date: today,
+        date: today, // Gunakan format string yang konsisten
         time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
         status: status,
         note: note
       };
 
-      // Tampilan Loading di Tombol saat data dikirim ke Google Sheets
+      // Buat tombol jadi mode "Menyimpan" agar tidak diklik berkali-kali
       document.getElementById('action-buttons').classList.add('opacity-50', 'pointer-events-none');
       document.getElementById('btn-hadir').innerHTML = `<p class="text-white font-bold animate-pulse text-center">Menyimpan ke server...</p>`;
 
       try {
+        // Kirim data ke Google Sheets
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(newAbsen)
         });
         
-        // Tarik data ulang setelah berhasil menyimpan agar tampilan update
-        await fetchDatabase();
+        // OPTIMISTIC UPDATE: Langsung masukkan data ke memori lokal tanpa harus tarik ulang dari Sheets
+        // Ini memastikan profil pengguna INSTAN berubah jadi "Sudah Absen"
+        globalDatabase.push(newAbsen);
         renderGuruDashboard();
+
       } catch(err) {
         alert('Gagal mengirim data! Pastikan internet Anda aktif.');
       } finally {
-        // Kembalikan wujud tombol jika terjadi error atau berhasil
+        // Kembalikan tampilan tombol jika suatu saat error
         document.getElementById('action-buttons').classList.remove('opacity-50', 'pointer-events-none');
         document.getElementById('btn-hadir').innerHTML = `<i data-lucide="check-circle" class="w-8 h-8 text-white/70 mb-2"></i><h3 class="text-white font-bold text-xl">Hadir Sekarang</h3><p class="text-emerald-50 text-xs font-medium mt-1">Klik untuk konfirmasi kehadiran</p>`;
         lucide.createIcons();
@@ -361,11 +379,11 @@
       closeNote();
     }
 
-    // === ADMIN FEATURES ===
+    // === LOGIKA DASHBOARD ADMIN ===
     function renderAdminDashboard() {
       document.getElementById('admin-name').textContent = currentUser.name;
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayString();
       const hariIni = globalDatabase.filter(a => a.date === today && a.status === 'HADIR');
       
       document.getElementById('stat-hadir').textContent = hariIni.length;
@@ -374,7 +392,8 @@
       const list = document.getElementById('admin-list');
       list.innerHTML = '';
       
-      const sortedDb = [...globalDatabase].sort((a,b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+      // Mengurutkan dari yang paling baru
+      const sortedDb = [...globalDatabase].reverse();
 
       if(sortedDb.length === 0) {
          list.innerHTML = '<p class="text-slate-400 text-center py-6 font-medium text-sm">Belum ada data absensi di server.</p>';
@@ -385,7 +404,7 @@
           <div class="bg-white p-4 rounded-xl flex items-center justify-between border border-slate-100 shadow-sm">
             <div>
               <p class="text-sm font-bold text-slate-800">${a.name}</p>
-              <p class="text-[11px] font-medium text-slate-500 mt-0.5">${formatShortDate(a.date)} • Pukul ${a.time}</p>
+              <p class="text-[11px] font-medium text-slate-500 mt-0.5">${a.date.replace(/-/g, '/')} • Pukul ${a.time}</p>
             </div>
             <div class="text-right">
               <p class="text-[10px] font-black ${getStatusColor(a.status)}">${a.status}</p>
@@ -396,7 +415,6 @@
       });
     }
 
-    // Tombol untuk merefresh data terbaru ke Google Sheet secara manual
     async function refreshAdmin(event) {
       const btn = event.target;
       const textLama = btn.textContent;
@@ -448,11 +466,6 @@
       return 'text-slate-500';
     }
 
-    function formatShortDate(d) {
-      return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(d));
-    }
-
-    // Inisialisasi Icon
     lucide.createIcons();
   </script>
 </body>
