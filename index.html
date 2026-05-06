@@ -211,6 +211,7 @@
     // DATA MASTER
     const MASTER_USERS = [
       { id: 'admin', name: 'Wilhelmina Kasih, S.Ag,S.Pd', role: 'admin' },
+      { id: '100', name: 'Wilhelmina Kasih, S.Ag,S.Pd', role: 'Kepala Sekolah' },
       { id: '101', name: 'Ambrosius Sina, S.Pd', role: 'guru' },
       { id: '102', name: 'Trifosa Rabe, S.Pd', role: 'guru' },
       { id: '103', name: 'Priska Oni, S.Pd', role: 'guru' },
@@ -238,7 +239,7 @@
       const msg = document.getElementById('login-msg');
       const btn = document.getElementById('btn-login');
 
-      const user = MASTER_USERS.find(u => u.id === id && (role === 'admin' ? u.role === 'admin' : u.role !== 'admin'));
+      const user = MASTER_USERS.find(u => String(u.id) === String(id) && (role === 'admin' ? u.role === 'admin' : u.role !== 'admin'));
 
       if (user) {
         currentUser = user;
@@ -277,11 +278,12 @@
         
         globalDatabase = rawData.map(row => {
           let cleanDate = row.date;
+          // Standarisasi jika format tanggal berupa ISO String dari server
           if (cleanDate && typeof cleanDate === 'string' && cleanDate.includes('T')) {
             const d = new Date(cleanDate);
             cleanDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
           }
-          return { ...row, date: cleanDate };
+          return { ...row, id_user: String(row.id_user), date: cleanDate };
         });
       } catch (error) {
         console.error("Gagal terhubung:", error);
@@ -309,18 +311,7 @@
       document.getElementById('current-date').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(now);
       
       const today = getTodayString();
-      const hasAbsen = globalDatabase.find(a => {
-        if (a.id_user !== currentUser.id) return false;
-        if (a.date === today) return true;
-        try {
-          const d = new Date(a.date);
-          if (!isNaN(d.getTime())) {
-            const fallbackDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            if (fallbackDate === today) return true;
-          }
-        } catch(e) {}
-        return false;
-      });
+      const hasAbsen = globalDatabase.find(a => String(a.id_user) === String(currentUser.id) && a.date === today);
 
       const badge = document.getElementById('status-badge');
       const actionButtons = document.getElementById('action-buttons');
@@ -349,7 +340,7 @@
         `;
       }
 
-      const history = globalDatabase.filter(a => a.id_user === currentUser.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+      const history = globalDatabase.filter(a => String(a.id_user) === String(currentUser.id)).sort((a,b) => new Date(b.date) - new Date(a.date));
       const list = document.getElementById('guru-history-list');
       list.innerHTML = history.length ? '' : '<p class="text-slate-400 text-center py-6 font-medium text-sm">Belum ada riwayat di server</p>';
       
@@ -369,10 +360,10 @@
 
     async function submitAbsen(status, note = '') {
       const today = getTodayString();
-      const existing = globalDatabase.find(a => a.id_user === currentUser.id && a.date === today);
+      const existing = globalDatabase.find(a => String(a.id_user) === String(currentUser.id) && a.date === today);
       if (existing) return;
 
-      const newAbsen = { id_user: currentUser.id, name: currentUser.name, date: today, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: status, note: note };
+      const newAbsen = { id_user: String(currentUser.id), name: currentUser.name, date: today, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: status, note: note };
       const actionButtons = document.getElementById('action-buttons');
       const btnHadir = document.getElementById('btn-hadir');
       const originalHTML = btnHadir.innerHTML;
@@ -399,10 +390,7 @@
     // === HALAMAN ADMIN DESKTOP ===
     function renderAdminDashboard() {
       const today = getTodayString();
-      const hariIni = globalDatabase.filter(a => {
-        if (a.date === today) return true;
-        try { const d = new Date(a.date); if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` === today; } catch(e) {} return false;
-      }).filter(a => a.status === 'HADIR');
+      const hariIni = globalDatabase.filter(a => a.date === today && a.status === 'HADIR');
       
       document.getElementById('stat-hadir').textContent = hariIni.length;
       document.getElementById('stat-total').textContent = globalDatabase.length;
@@ -454,7 +442,7 @@
           method: 'POST',
           mode: 'no-cors',
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: 'clear' }) // Kirim perintah khusus ke Apps Script
+          body: JSON.stringify({ action: 'clear' })
         });
         
         globalDatabase = [];
