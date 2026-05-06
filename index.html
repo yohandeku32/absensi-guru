@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="id" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Absensi SDK Kuapuatu</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  </style>
+</head>
+<body class="h-full bg-slate-50 text-slate-800 selection:bg-emerald-500/30">
+
+  <div id="app" class="max-w-md mx-auto h-full flex flex-col relative overflow-hidden bg-slate-50 shadow-2xl shadow-slate-200/50">
+    
+    <div id="page-login" class="flex-1 flex flex-col justify-center px-8 fade-in">
+      <div class="text-center mb-10">
+        <div class="w-20 h-20 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/20 rotate-3">
+          <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
+        </div>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">SDK Kuapuatu</h1>
+        <p class="text-slate-500 mt-2 font-medium">Sistem Informasi Absensi Terpadu</p>
+      </div>
+
+      <div class="space-y-4">
+        <div class="relative">
+          <label class="text-xs font-bold text-emerald-600 uppercase tracking-wider ml-1">Masuk Sebagai</label>
+          <select id="login-role" class="w-full mt-1 px-4 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none appearance-none font-medium shadow-sm">
+            <option value="guru">Guru / Pegawai</option>
+            <option value="admin">Administrator</option>
+          </select>
+        </div>
+        <div class="relative">
+          <input id="login-id" type="text" placeholder="Masukkan NIP / Username" class="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 font-medium shadow-sm">
+        </div>
+        <button onclick="handleLogin()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-500/30 active:scale-[0.98] mt-2">
+          Masuk ke Dashboard
+        </button>
+        <p id="login-msg" class="text-center text-red-500 font-medium text-sm hidden">Data tidak ditemukan!</p>
+      </div>
+      
+      <div class="mt-12 text-center">
+        <p class="text-slate-400 text-xs font-medium">© 2024 SDK Kuapuatu Mobile v2.0</p>
+      </div>
+    </div>
+
+    <div id="page-guru" class="hidden flex-1 flex flex-col fade-in">
+      <header class="p-6 flex items-center justify-between bg-white/80 backdrop-blur-md border-b border-slate-100 z-10 sticky top-0">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
+            <i data-lucide="user" class="w-5 h-5 text-emerald-600"></i>
+          </div>
+          <div>
+            <h2 id="user-name" class="font-bold text-slate-900 leading-tight">-</h2>
+            <p id="user-role" class="text-xs font-medium text-slate-500">Guru</p>
+          </div>
+        </div>
+        <button onclick="logout()" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+        </button>
+      </header>
+
+      <main class="flex-1 overflow-y-auto px-6 pt-6 pb-24 space-y-6">
+        <div class="bg-white p-5 rounded-[2rem] flex items-center justify-between shadow-sm border border-slate-100">
+          <div>
+            <p id="current-date" class="text-emerald-600 font-bold text-lg leading-tight">Memuat...</p>
+            <p class="text-slate-500 text-xs mt-1 font-medium">Status Anda hari ini:</p>
+          </div>
+          <div id="status-badge" class="px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500">Belum Absen</div>
+        </div>
+
+        <div id="action-area" class="grid grid-cols-1 gap-3">
+          <button onclick="submitAbsen('HADIR')" class="group relative overflow-hidden p-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-[2rem] text-left transition-all active:scale-95 shadow-xl shadow-emerald-500/20">
+            <i data-lucide="check-circle" class="w-8 h-8 text-white/70 mb-2"></i>
+            <h3 class="text-white font-bold text-xl">Hadir Sekarang</h3>
+            <p class="text-emerald-50 text-xs font-medium mt-1">Klik untuk konfirmasi kehadiran</p>
+          </button>
+          
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="openNote('IZIN')" class="p-4 bg-white rounded-[1.5rem] text-left border border-slate-200 shadow-sm hover:border-amber-300 transition-colors">
+              <i data-lucide="mail" class="w-6 h-6 text-amber-500 mb-2"></i>
+              <p class="text-slate-800 font-bold">Izin</p>
+            </button>
+            <button onclick="openNote('SAKIT')" class="p-4 bg-white rounded-[1.5rem] text-left border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
+              <i data-lucide="thermometer" class="w-6 h-6 text-blue-500 mb-2"></i>
+              <p class="text-slate-800 font-bold">Sakit</p>
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-4 pt-2">
+          <h3 class="font-bold text-slate-800 flex items-center gap-2">
+            <i data-lucide="history" class="w-5 h-5 text-emerald-500"></i> Riwayat Bulan Ini
+          </h3>
+          <div id="guru-history-list" class="space-y-3">
+            </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="page-admin" class="hidden flex-1 flex flex-col fade-in">
+      <header class="p-6 bg-white border-b border-slate-100 z-10 sticky top-0">
+        <h2 class="text-xl font-extrabold text-slate-900">Panel Admin</h2>
+        <p class="text-xs text-slate-500 font-medium">Laporan Absensi SDK Kuapuatu</p>
+      </header>
+
+      <main class="flex-1 overflow-y-auto p-6 space-y-6 pb-24">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-emerald-50 border border-emerald-100 p-5 rounded-2xl">
+            <p class="text-xs text-emerald-600 font-bold uppercase tracking-wide">Hadir Hari Ini</p>
+            <p id="stat-hadir" class="text-3xl font-black text-emerald-700 mt-1">0</p>
+          </div>
+          <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+            <p class="text-xs text-slate-500 font-bold uppercase tracking-wide">Total Guru</p>
+            <p class="text-3xl font-black text-slate-800 mt-1">11</p>
+          </div>
+        </div>
+
+        <button onclick="exportToExcel()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-all">
+          <i data-lucide="download" class="w-5 h-5"></i> Unduh Laporan (Excel)
+        </button>
+
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-slate-800">Absensi Terbaru</h3>
+            <button onclick="clearData()" class="text-[10px] text-red-500 font-bold uppercase tracking-widest hover:text-red-600">Hapus Semua</button>
+          </div>
+          <div id="admin-list" class="space-y-3">
+            </div>
+        </div>
+      </main>
+      
+      <button onclick="logout()" class="absolute bottom-6 right-6 w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-xl border border-slate-100 text-red-500 hover:bg-red-50 transition-colors">
+        <i data-lucide="log-out" class="w-6 h-6"></i>
+      </button>
+    </div>
+
+    <div id="modal-note" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+      <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 fade-in shadow-2xl">
+        <h3 id="modal-title" class="text-xl font-black text-slate-900 mb-1">Keterangan</h3>
+        <p class="text-slate-500 text-sm mb-6 font-medium">Tulis alasan atau catatan singkat Anda.</p>
+        <textarea id="note-text" class="w-full h-32 bg-slate-50 border border-slate-200 rounded-2xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 font-medium" placeholder="Contoh: Sakit demam, ada urusan keluarga..."></textarea>
+        <div class="flex gap-3 mt-6">
+          <button onclick="closeNote()" class="flex-1 py-4 font-bold text-slate-500 hover:text-slate-700 bg-slate-100 rounded-2xl">Batal</button>
+          <button onclick="confirmAbsenWithNote()" class="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 rounded-2xl font-bold text-white shadow-lg shadow-emerald-500/20">Kirim</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // === DATA MASTER ===
+    const MASTER_USERS = [
+      { id: 'admin', name: 'Kepala Sekolah', role: 'admin' },
+      { id: '101', name: 'Dra. Maria Ulfa', role: 'guru' },
+      { id: '102', name: 'Budi Santoso, S.Pd', role: 'guru' },
+      { id: '103', name: 'Siti Aminah, M.Pd', role: 'guru' },
+      { id: '104', name: 'Andi Wijaya, S.Pd', role: 'guru' },
+      { id: '105', name: 'Rina Permata, S.Pd', role: 'guru' },
+      { id: '106', name: 'Eko Prasetyo, S.Pd', role: 'guru' },
+      { id: '107', name: 'Dewi Lestari, S.Pd', role: 'guru' },
+      { id: '108', name: 'Fajar Ramadhan, S.Pd', role: 'guru' },
+      { id: '109', name: 'Ani Maryani, S.Pd', role: 'guru' },
+      { id: '110', name: 'Hendra, S.Pd', role: 'guru' },
+      { id: '201', name: 'Yanto (TU)', role: 'pegawai' }
+    ];
+
+    let currentUser = null;
+    let pendingStatus = '';
+
+    // === CORE LOGIC ===
+    function handleLogin() {
+      const role = document.getElementById('login-role').value;
+      const id = document.getElementById('login-id').value.trim();
+      const msg = document.getElementById('login-msg');
+
+      const user = MASTER_USERS.find(u => u.id === id && (role === 'admin' ? u.role === 'admin' : u.role !== 'admin'));
+
+      if (user) {
+        currentUser = user;
+        msg.classList.add('hidden');
+        if (user.role === 'admin') {
+          showPage('page-admin');
+          renderAdminDashboard();
+        } else {
+          showPage('page-guru');
+          renderGuruDashboard();
+        }
+      } else {
+        msg.classList.remove('hidden');
+      }
+    }
+
+    function showPage(pageId) {
+      document.querySelectorAll('#app > div').forEach(div => div.classList.add('hidden'));
+      document.getElementById(pageId).classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('login-id').value = '';
+      showPage('page-login');
+    }
+
+    // === GURU FEATURES ===
+    function renderGuruDashboard() {
+      document.getElementById('user-name').textContent = currentUser.name;
+      document.getElementById('user-role').textContent = currentUser.role.toUpperCase();
+      document.getElementById('current-date').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+      
+      const db = getAttendance();
+      const today = new Date().toISOString().split('T')[0];
+      const hasAbsen = db.find(a => a.id_user === currentUser.id && a.date === today);
+
+      const badge = document.getElementById('status-badge');
+      const actionArea = document.getElementById('action-area');
+
+      if (hasAbsen) {
+        badge.textContent = hasAbsen.status;
+        badge.className = `px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-100 ${getStatusColor(hasAbsen.status)}`;
+        actionArea.innerHTML = `
+          <div class="bg-emerald-50 p-8 rounded-[2rem] text-center border border-emerald-100 shadow-sm">
+            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+               <i data-lucide="check" class="text-emerald-600 w-8 h-8"></i>
+            </div>
+            <p class="text-emerald-800 font-extrabold text-xl">Sudah Absen!</p>
+            <p class="text-emerald-600 text-sm mt-1 font-medium">Terima kasih atas dedikasi Anda.</p>
+          </div>
+        `;
+      } else {
+        badge.textContent = "Belum Absen";
+        badge.className = "px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500";
+      }
+
+      // History Guru
+      const history = db.filter(a => a.id_user === currentUser.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+      const list = document.getElementById('guru-history-list');
+      list.innerHTML = history.length ? '' : '<p class="text-slate-400 text-center py-6 font-medium text-sm">Belum ada riwayat</p>';
+      
+      history.slice(0, 5).forEach(h => {
+        list.innerHTML += `
+          <div class="bg-white p-4 rounded-2xl flex items-center justify-between border border-slate-100 shadow-sm">
+            <div>
+              <p class="text-slate-800 font-bold text-sm">${formatShortDate(h.date)}</p>
+              <p class="text-slate-500 font-medium text-[11px] mt-0.5">${h.time} ${h.note ? '• ' + h.note : ''}</p>
+            </div>
+            <span class="text-[10px] font-black bg-slate-50 px-2.5 py-1 rounded-lg ${getStatusColor(h.status)}">${h.status}</span>
+          </div>
+        `;
+      });
+      lucide.createIcons();
+    }
+
+    function submitAbsen(status, note = '') {
+      const db = getAttendance();
+      const today = new Date().toISOString().split('T')[0];
+      
+      const newAbsen = {
+        id_user: currentUser.id,
+        name: currentUser.name,
+        date: today,
+        time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        status: status,
+        note: note
+      };
+
+      db.push(newAbsen);
+      localStorage.setItem('absensi_sdk_k', JSON.stringify(db));
+      renderGuruDashboard();
+    }
+
+    function openNote(status) {
+      pendingStatus = status;
+      document.getElementById('modal-title').textContent = `Keterangan ${status}`;
+      document.getElementById('modal-note').classList.remove('hidden');
+    }
+
+    function closeNote() {
+      document.getElementById('modal-note').classList.add('hidden');
+      document.getElementById('note-text').value = '';
+    }
+
+    function confirmAbsenWithNote() {
+      const note = document.getElementById('note-text').value.trim();
+      submitAbsen(pendingStatus, note);
+      closeNote();
+    }
+
+    // === ADMIN FEATURES ===
+    function renderAdminDashboard() {
+      const db = getAttendance();
+      const today = new Date().toISOString().split('T')[0];
+      const hariIni = db.filter(a => a.date === today && a.status === 'HADIR');
+      
+      document.getElementById('stat-hadir').textContent = hariIni.length;
+
+      const list = document.getElementById('admin-list');
+      list.innerHTML = '';
+      
+      const sortedDb = [...db].sort((a,b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+
+      if(sortedDb.length === 0) {
+         list.innerHTML = '<p class="text-slate-400 text-center py-6 font-medium text-sm">Belum ada data absensi</p>';
+      }
+
+      sortedDb.slice(0, 15).forEach(a => {
+        list.innerHTML += `
+          <div class="bg-white p-4 rounded-xl flex items-center justify-between border border-slate-100 shadow-sm">
+            <div>
+              <p class="text-sm font-bold text-slate-800">${a.name}</p>
+              <p class="text-[11px] font-medium text-slate-500 mt-0.5">${formatShortDate(a.date)} • Pukul ${a.time}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-[10px] font-black ${getStatusColor(a.status)}">${a.status}</p>
+              <p class="text-[10px] font-medium text-slate-500 truncate w-24 mt-0.5">${a.note || ''}</p>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function exportToExcel() {
+      const db = getAttendance();
+      if (!db.length) {
+        alert('Data masih kosong! Silakan minta guru absen terlebih dahulu.');
+        return;
+      }
+
+      // Membuat format CSV murni bawaan Javascript (Anti Gagal di semua Browser)
+      const header = ["ID User", "Nama", "Tanggal", "Jam", "Status", "Keterangan"];
+      const csvRows = [];
+      csvRows.push(header.join(","));
+
+      for (const row of db) {
+        const values = [
+          row.id_user,
+          `"${row.name}"`, 
+          row.date,
+          row.time,
+          row.status,
+          `"${row.note || ''}"`
+        ];
+        csvRows.push(values.join(","));
+      }
+
+      // Proses pengunduhan
+      const csvString = csvRows.join("\n");
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Laporan_Absensi_SDK_Kuapuatu_${new Date().getMonth()+1}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function clearData() {
+      if(confirm('Apakah Anda yakin ingin menghapus SEMUA data absensi bulan ini?')) {
+        localStorage.removeItem('absensi_sdk_k');
+        renderAdminDashboard();
+      }
+    }
+
+    // === UTILS ===
+    function getAttendance() {
+      const data = localStorage.getItem('absensi_sdk_k');
+      return data ? JSON.parse(data) : [];
+    }
+
+    function getStatusColor(s) {
+      if(s === 'HADIR') return 'text-emerald-600';
+      if(s === 'SAKIT') return 'text-blue-600';
+      if(s === 'IZIN') return 'text-amber-600';
+      return 'text-slate-500';
+    }
+
+    function formatShortDate(d) {
+      return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(d));
+    }
+
+    // Inisialisasi awal
+    lucide.createIcons();
+  </script>
+</body>
+</html>
