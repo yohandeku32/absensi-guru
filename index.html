@@ -39,7 +39,7 @@
         <div class="relative">
           <input id="login-id" type="text" placeholder="Masukkan NIP / Username" class="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 font-medium shadow-sm">
         </div>
-        <button onclick="handleLogin()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-500/30 active:scale-[0.98] mt-2">
+        <button id="btn-login" onclick="handleLogin()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-500/30 active:scale-[0.98] mt-2 flex justify-center items-center gap-2">
           Masuk ke Dashboard
         </button>
         <p id="login-msg" class="text-center text-red-500 font-medium text-sm hidden">Data tidak ditemukan!</p>
@@ -76,7 +76,7 @@
         </div>
 
         <div id="action-buttons" class="grid grid-cols-1 gap-3">
-          <button onclick="submitAbsen('HADIR')" class="group relative overflow-hidden p-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-[2rem] text-left transition-all active:scale-95 shadow-xl shadow-emerald-500/20">
+          <button id="btn-hadir" onclick="submitAbsen('HADIR')" class="group relative overflow-hidden p-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-[2rem] text-left transition-all active:scale-95 shadow-xl shadow-emerald-500/20">
             <i data-lucide="check-circle" class="w-8 h-8 text-white/70 mb-2"></i>
             <h3 class="text-white font-bold text-xl">Hadir Sekarang</h3>
             <p class="text-emerald-50 text-xs font-medium mt-1">Klik untuk konfirmasi kehadiran</p>
@@ -104,7 +104,7 @@
 
         <div class="space-y-4 pt-2">
           <h3 class="font-bold text-slate-800 flex items-center gap-2">
-            <i data-lucide="history" class="w-5 h-5 text-emerald-500"></i> Riwayat Bulan Ini
+            <i data-lucide="history" class="w-5 h-5 text-emerald-500"></i> Riwayat di Server
           </h3>
           <div id="guru-history-list" class="space-y-3">
             </div>
@@ -132,8 +132,8 @@
             <p id="stat-hadir" class="text-3xl font-black text-emerald-700 mt-1">0</p>
           </div>
           <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
-            <p class="text-xs text-slate-500 font-bold uppercase tracking-wide">Total Guru</p>
-            <p class="text-3xl font-black text-slate-800 mt-1">11</p>
+            <p class="text-xs text-slate-500 font-bold uppercase tracking-wide">Total Data</p>
+            <p id="stat-total" class="text-3xl font-black text-slate-800 mt-1">0</p>
           </div>
         </div>
 
@@ -143,8 +143,8 @@
 
         <div class="space-y-4">
           <div class="flex justify-between items-center">
-            <h3 class="font-bold text-slate-800">Absensi Terbaru</h3>
-            <button onclick="clearData()" class="text-[10px] text-red-500 font-bold uppercase tracking-widest hover:text-red-600">Hapus Semua</button>
+            <h3 class="font-bold text-slate-800">Semua Absensi Terbaru</h3>
+            <button onclick="refreshAdmin(event)" class="text-[10px] text-blue-500 font-bold uppercase tracking-widest hover:text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg">Refresh Data</button>
           </div>
           <div id="admin-list" class="space-y-3">
             </div>
@@ -171,6 +171,11 @@
   </div>
 
   <script>
+    // ==========================================
+    // URL DATABASE GOOGLE SHEETS ANDA
+    // ==========================================
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6Sf4Fh-OGRuKBDPd8nnnkm4fxNvgeqUN64azYPUIn32CEwbmqlx8SeIqc4lfUjNr_/exec";
+
     // === DATA MASTER ===
     const MASTER_USERS = [
       { id: 'admin', name: 'Wilhelmina Kasih, S.Ag,S.Pd', role: 'admin' },
@@ -188,18 +193,36 @@
 
     let currentUser = null;
     let pendingStatus = '';
+    let globalDatabase = []; // Tempat menyimpan data dari server (Google Sheets)
 
-    // === CORE LOGIC ===
-    function handleLogin() {
+    // === CORE LOGIC (ONLINE MODE) ===
+    async function handleLogin() {
       const role = document.getElementById('login-role').value;
       const id = document.getElementById('login-id').value.trim();
       const msg = document.getElementById('login-msg');
+      const btn = document.getElementById('btn-login');
 
       const user = MASTER_USERS.find(u => u.id === id && (role === 'admin' ? u.role === 'admin' : u.role !== 'admin'));
 
       if (user) {
         currentUser = user;
+        
+        // Mode Loading - Mengambil data
+        msg.classList.remove('hidden');
+        msg.classList.replace('text-red-500', 'text-blue-500');
+        msg.innerHTML = '<span class="animate-pulse">Sinkronisasi data dengan server...</span>';
+        btn.disabled = true;
+        btn.classList.add('opacity-70');
+
+        // Tunggu tarikan data online dari Google Sheets
+        await fetchDatabase();
+
+        // Kembalikan tombol seperti semula
         msg.classList.add('hidden');
+        msg.classList.replace('text-blue-500', 'text-red-500');
+        btn.disabled = false;
+        btn.classList.remove('opacity-70');
+
         if (user.role === 'admin') {
           showPage('page-admin');
           renderAdminDashboard();
@@ -209,6 +232,17 @@
         }
       } else {
         msg.classList.remove('hidden');
+        msg.textContent = 'Data tidak ditemukan!';
+      }
+    }
+
+    async function fetchDatabase() {
+      try {
+        const response = await fetch(GOOGLE_SCRIPT_URL);
+        globalDatabase = await response.json();
+      } catch (error) {
+        alert('Gagal terhubung ke server Google Sheets. Pastikan internet Anda stabil.');
+        console.error(error);
       }
     }
 
@@ -227,42 +261,34 @@
     // === GURU FEATURES ===
     function renderGuruDashboard() {
       document.getElementById('user-name').textContent = currentUser.name;
-      
-      if (currentUser.role === 'pegawai') {
-        document.getElementById('user-role').textContent = 'PEGAWAI';
-      } else {
-        document.getElementById('user-role').textContent = 'GURU';
-      }
-      
+      document.getElementById('user-role').textContent = currentUser.role === 'pegawai' ? 'PEGAWAI' : 'GURU';
       document.getElementById('current-date').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
       
-      const db = getAttendance();
       const today = new Date().toISOString().split('T')[0];
       
-      // Mengecek apakah spesifik "user yang login" (currentUser.id) sudah absen hari ini
-      const hasAbsen = db.find(a => a.id_user === currentUser.id && a.date === today);
+      // Mengecek apakah spesifik "user yang login" sudah absen hari ini di Database Online
+      const hasAbsen = globalDatabase.find(a => a.id_user === currentUser.id && a.date === today);
 
       const badge = document.getElementById('status-badge');
       const actionButtons = document.getElementById('action-buttons');
       const actionSuccess = document.getElementById('action-success');
 
-      // Toggles (Logika menyembunyikan & memunculkan elemen yang sudah diperbaiki)
       if (hasAbsen) {
         badge.textContent = hasAbsen.status;
         badge.className = `px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-100 ${getStatusColor(hasAbsen.status)}`;
-        actionButtons.classList.add('hidden'); // Sembunyikan tombol
-        actionSuccess.classList.remove('hidden'); // Munculkan tulisan Sukses
+        actionButtons.classList.add('hidden');
+        actionSuccess.classList.remove('hidden');
       } else {
         badge.textContent = "Belum Absen";
         badge.className = "px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500";
-        actionButtons.classList.remove('hidden'); // Memunculkan tombol absen kembali
-        actionSuccess.classList.add('hidden'); // Sembunyikan tulisan sukses
+        actionButtons.classList.remove('hidden');
+        actionSuccess.classList.add('hidden');
       }
 
-      // History Guru
-      const history = db.filter(a => a.id_user === currentUser.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+      // History Guru (Hanya menampilkan miliknya sendiri yang diambil dari server)
+      const history = globalDatabase.filter(a => a.id_user === currentUser.id).sort((a,b) => new Date(b.date) - new Date(a.date));
       const list = document.getElementById('guru-history-list');
-      list.innerHTML = history.length ? '' : '<p class="text-slate-400 text-center py-6 font-medium text-sm">Belum ada riwayat</p>';
+      list.innerHTML = history.length ? '' : '<p class="text-slate-400 text-center py-6 font-medium text-sm">Belum ada riwayat di server</p>';
       
       history.slice(0, 5).forEach(h => {
         list.innerHTML += `
@@ -278,12 +304,11 @@
       lucide.createIcons();
     }
 
-    function submitAbsen(status, note = '') {
-      const db = getAttendance();
+    async function submitAbsen(status, note = '') {
       const today = new Date().toISOString().split('T')[0];
       
-      // Cegah absen dobel (Pengaman ekstra)
-      const existing = db.find(a => a.id_user === currentUser.id && a.date === today);
+      // Cegah submit ganda jika tombol tertekan 2 kali
+      const existing = globalDatabase.find(a => a.id_user === currentUser.id && a.date === today);
       if (existing) return;
 
       const newAbsen = {
@@ -295,11 +320,28 @@
         note: note
       };
 
-      db.push(newAbsen);
-      localStorage.setItem('absensi_sdk_k', JSON.stringify(db));
-      
-      // Render ulang layar agar memunculkan badge SUDAH ABSEN
-      renderGuruDashboard();
+      // Tampilan Loading di Tombol saat data dikirim ke Google Sheets
+      document.getElementById('action-buttons').classList.add('opacity-50', 'pointer-events-none');
+      document.getElementById('btn-hadir').innerHTML = `<p class="text-white font-bold animate-pulse text-center">Menyimpan ke server...</p>`;
+
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(newAbsen)
+        });
+        
+        // Tarik data ulang setelah berhasil menyimpan agar tampilan update
+        await fetchDatabase();
+        renderGuruDashboard();
+      } catch(err) {
+        alert('Gagal mengirim data! Pastikan internet Anda aktif.');
+      } finally {
+        // Kembalikan wujud tombol jika terjadi error atau berhasil
+        document.getElementById('action-buttons').classList.remove('opacity-50', 'pointer-events-none');
+        document.getElementById('btn-hadir').innerHTML = `<i data-lucide="check-circle" class="w-8 h-8 text-white/70 mb-2"></i><h3 class="text-white font-bold text-xl">Hadir Sekarang</h3><p class="text-emerald-50 text-xs font-medium mt-1">Klik untuk konfirmasi kehadiran</p>`;
+        lucide.createIcons();
+      }
     }
 
     function openNote(status) {
@@ -323,22 +365,22 @@
     function renderAdminDashboard() {
       document.getElementById('admin-name').textContent = currentUser.name;
 
-      const db = getAttendance();
       const today = new Date().toISOString().split('T')[0];
-      const hariIni = db.filter(a => a.date === today && a.status === 'HADIR');
+      const hariIni = globalDatabase.filter(a => a.date === today && a.status === 'HADIR');
       
       document.getElementById('stat-hadir').textContent = hariIni.length;
+      document.getElementById('stat-total').textContent = globalDatabase.length;
 
       const list = document.getElementById('admin-list');
       list.innerHTML = '';
       
-      const sortedDb = [...db].sort((a,b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+      const sortedDb = [...globalDatabase].sort((a,b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
 
       if(sortedDb.length === 0) {
-         list.innerHTML = '<p class="text-slate-400 text-center py-6 font-medium text-sm">Belum ada data absensi</p>';
+         list.innerHTML = '<p class="text-slate-400 text-center py-6 font-medium text-sm">Belum ada data absensi di server.</p>';
       }
 
-      sortedDb.slice(0, 15).forEach(a => {
+      sortedDb.slice(0, 50).forEach(a => {
         list.innerHTML += `
           <div class="bg-white p-4 rounded-xl flex items-center justify-between border border-slate-100 shadow-sm">
             <div>
@@ -354,10 +396,19 @@
       });
     }
 
+    // Tombol untuk merefresh data terbaru ke Google Sheet secara manual
+    async function refreshAdmin(event) {
+      const btn = event.target;
+      const textLama = btn.textContent;
+      btn.textContent = "Loading...";
+      await fetchDatabase();
+      renderAdminDashboard();
+      btn.textContent = textLama;
+    }
+
     function exportToExcel() {
-      const db = getAttendance();
-      if (!db.length) {
-        alert('Data masih kosong! Silakan minta guru absen terlebih dahulu.');
+      if (!globalDatabase.length) {
+        alert('Data masih kosong di server!');
         return;
       }
 
@@ -365,7 +416,7 @@
       const csvRows = [];
       csvRows.push(header.join(","));
 
-      for (const row of db) {
+      for (const row of globalDatabase) {
         const values = [
           row.id_user,
           `"${row.name}"`, 
@@ -389,19 +440,7 @@
       URL.revokeObjectURL(url);
     }
 
-    function clearData() {
-      if(confirm('Apakah Anda yakin ingin menghapus SEMUA data absensi bulan ini?')) {
-        localStorage.removeItem('absensi_sdk_k');
-        renderAdminDashboard();
-      }
-    }
-
     // === UTILS ===
-    function getAttendance() {
-      const data = localStorage.getItem('absensi_sdk_k');
-      return data ? JSON.parse(data) : [];
-    }
-
     function getStatusColor(s) {
       if(s === 'HADIR') return 'text-emerald-600';
       if(s === 'SAKIT') return 'text-blue-600';
@@ -413,7 +452,7 @@
       return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(d));
     }
 
-    // Inisialisasi awal
+    // Inisialisasi Icon
     lucide.createIcons();
   </script>
 </body>
