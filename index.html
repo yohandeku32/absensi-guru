@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E-Absensi SDK Kuapuatu</title>
+  <title>E-Absensi SDK Kuaputu</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@
         <div class="w-20 h-20 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/20 rotate-3">
           <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
         </div>
-        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">SDK Kuapuatu</h1>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">SDK Kuaputu</h1>
         <p class="text-slate-500 mt-2 font-medium">Sistem Informasi Absensi Terpadu</p>
       </div>
 
@@ -44,10 +44,6 @@
         </button>
         <p id="login-msg" class="text-center text-red-500 font-medium text-sm hidden">Data tidak ditemukan!</p>
       </div>
-      
-      <div class="mt-12 text-center">
-        <p class="text-slate-400 text-xs font-medium">© 2024 SDK Kuapuatu Mobile v2.0</p>
-      </div>
     </div>
 
     <div id="page-guru" class="hidden flex-1 flex flex-col fade-in">
@@ -58,7 +54,7 @@
           </div>
           <div>
             <h2 id="user-name" class="font-bold text-slate-900 leading-tight">-</h2>
-            <p id="user-role" class="text-xs font-medium text-slate-500">Guru</p>
+            <p id="user-role" class="text-xs font-bold text-slate-500">Guru</p>
           </div>
         </div>
         <button onclick="logout()" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
@@ -99,15 +95,14 @@
              <i data-lucide="check" class="text-emerald-600 w-8 h-8"></i>
           </div>
           <p class="text-emerald-800 font-extrabold text-xl">Sudah Absen!</p>
-          <p class="text-emerald-600 text-sm mt-1 font-medium">Terima kasih atas dedikasi Anda hari ini.</p>
+          <p class="text-emerald-600 text-sm mt-1 font-medium">Data kehadiran Anda telah tersimpan.</p>
         </div>
 
         <div class="space-y-4 pt-2">
           <h3 class="font-bold text-slate-800 flex items-center gap-2">
             <i data-lucide="history" class="w-5 h-5 text-emerald-500"></i> Riwayat di Server
           </h3>
-          <div id="guru-history-list" class="space-y-3">
-            </div>
+          <div id="guru-history-list" class="space-y-3"></div>
         </div>
       </main>
     </div>
@@ -146,8 +141,7 @@
             <h3 class="font-bold text-slate-800">Semua Absensi Terbaru</h3>
             <button onclick="refreshAdmin(event)" class="text-[10px] text-blue-500 font-bold uppercase tracking-widest hover:text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">Refresh Data</button>
           </div>
-          <div id="admin-list" class="space-y-3">
-            </div>
+          <div id="admin-list" class="space-y-3"></div>
         </div>
       </main>
       
@@ -171,12 +165,10 @@
   </div>
 
   <script>
-    // ==========================================
     // URL DATABASE GOOGLE SHEETS ANDA
-    // ==========================================
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6Sf4Fh-OGRuKBDPd8nnnkm4fxNvgeqUN64azYPUIn32CEwbmqlx8SeIqc4lfUjNr_/exec";
 
-    // === DATA MASTER ===
+    // DATA MASTER
     const MASTER_USERS = [
       { id: 'admin', name: 'Wilhelmina Kasih, S.Ag,S.Pd', role: 'admin' },
       { id: '101', name: 'Ambrosius Sina, S.Pd', role: 'guru' },
@@ -195,14 +187,11 @@
     let pendingStatus = '';
     let globalDatabase = []; 
 
-    // === PERBAIKAN 1: MENGUNCI FORMAT TANGGAL ===
-    // Selalu paksa format "YYYY-MM-DD" agar tidak bingung beda bahasa/perangkat
     function getTodayString() {
       const d = new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
-    // === LOGIKA LOGIN ===
     async function handleLogin() {
       const role = document.getElementById('login-role').value;
       const id = document.getElementById('login-id').value.trim();
@@ -240,19 +229,19 @@
       }
     }
 
-    // === PERBAIKAN 2: KONVERSI ZONA WAKTU SAAT MENARIK DATA ===
+    // FUNGSI ANTI-CACHE (Penting untuk Laptop Browser)
     async function fetchDatabase() {
       try {
-        const response = await fetch(GOOGLE_SCRIPT_URL);
+        // Menambahkan timestamp agar URL selalu unik dan browser terpaksa memuat data asli, BUKAN dari cache lokal
+        const antiCacheUrl = GOOGLE_SCRIPT_URL + "?nocache=" + new Date().getTime();
+        
+        const response = await fetch(antiCacheUrl);
         const rawData = await response.json();
         
         globalDatabase = rawData.map(row => {
           let cleanDate = row.date;
-          // Memecahkan bug UTC Timezone dari Google Sheets!
-          // Jika format dari server adalah "2026-05-05T16:00:00.000Z" (ISO)
           if (cleanDate && typeof cleanDate === 'string' && cleanDate.includes('T')) {
             const d = new Date(cleanDate);
-            // new Date() akan otomatis menerjemahkannya ke zona waktu WITA / WIB di HP kita
             cleanDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
           }
           return { ...row, date: cleanDate };
@@ -271,28 +260,20 @@
     function logout() {
       currentUser = null;
       document.getElementById('login-id').value = '';
+      globalDatabase = []; // Bersihkan data memori saat logout
       showPage('page-login');
     }
 
-    // === LOGIKA DASHBOARD GURU ===
     function renderGuruDashboard() {
       document.getElementById('user-name').textContent = currentUser.name;
-      document.getElementById('user-role').textContent = currentUser.role === 'pegawai' ? 'PEGAWAI' : 'GURU';
       
       const now = new Date();
       document.getElementById('current-date').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(now);
       
       const today = getTodayString();
-      
-      // === PERBAIKAN 3: LOGIKA ANTI DOBEL ABSEN DIPERKUAT ===
-      // Akan mengunci status jika tanggal YYYY-MM-DD hari ini COCOK dengan yang ada di server
       const hasAbsen = globalDatabase.find(a => {
         if (a.id_user !== currentUser.id) return false;
-        
-        // Pengecekan 1: Samakan text langsung
         if (a.date === today) return true;
-        
-        // Pengecekan 2: Backup kalau Google sheet ngubah formatnya (misal jadi 05/06/2026)
         try {
           const d = new Date(a.date);
           if (!isNaN(d.getTime())) {
@@ -300,27 +281,42 @@
             if (fallbackDate === today) return true;
           }
         } catch(e) {}
-        
         return false;
       });
 
       const badge = document.getElementById('status-badge');
       const actionButtons = document.getElementById('action-buttons');
       const actionSuccess = document.getElementById('action-success');
+      const userRoleDisplay = document.getElementById('user-role');
+
+      // Setingan Profil Bawaan
+      let roleText = currentUser.role === 'pegawai' ? 'PEGAWAI' : 'GURU';
 
       if (hasAbsen) {
+        // JIKA SUDAH ABSEN
         badge.textContent = hasAbsen.status;
-        badge.className = `px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-100 ${getStatusColor(hasAbsen.status)}`;
-        actionButtons.classList.add('hidden'); // Hilangkan Tombol secara permanen
-        actionSuccess.classList.remove('hidden'); // Munculkan Sukses
+        badge.className = `px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-emerald-100 text-emerald-700`;
+        
+        // Ubah Profil Atas!
+        userRoleDisplay.textContent = `${roleText} • SUDAH ABSEN (${hasAbsen.status})`;
+        userRoleDisplay.className = "text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 mt-1 inline-block";
+
+        actionButtons.classList.add('hidden');
+        actionSuccess.classList.remove('hidden');
       } else {
+        // JIKA BELUM ABSEN
         badge.textContent = "Belum Absen";
         badge.className = "px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500";
-        actionButtons.classList.remove('hidden'); // Munculkan Tombol
-        actionSuccess.classList.add('hidden'); // Sembunyikan Sukses
+        
+        // Profil Atas Normal
+        userRoleDisplay.textContent = roleText;
+        userRoleDisplay.className = "text-xs font-bold text-slate-500 mt-1 block";
+
+        actionButtons.classList.remove('hidden');
+        actionSuccess.classList.add('hidden');
       }
 
-      // Render Riwayat
+      // Render History
       const history = globalDatabase.filter(a => a.id_user === currentUser.id).sort((a,b) => new Date(b.date) - new Date(a.date));
       const list = document.getElementById('guru-history-list');
       list.innerHTML = history.length ? '' : '<p class="text-slate-400 text-center py-6 font-medium text-sm">Belum ada riwayat di server</p>';
@@ -341,8 +337,6 @@
 
     async function submitAbsen(status, note = '') {
       const today = getTodayString();
-      
-      // Keamanan Lapis 1
       const existing = globalDatabase.find(a => a.id_user === currentUser.id && a.date === today);
       if (existing) return;
 
@@ -355,7 +349,6 @@
         note: note
       };
 
-      // Keamanan Lapis 2: Matikan tombol pas ditekan agar tidak klik ganda
       const actionButtons = document.getElementById('action-buttons');
       const btnHadir = document.getElementById('btn-hadir');
       const originalHTML = btnHadir.innerHTML;
@@ -371,7 +364,6 @@
           body: JSON.stringify(newAbsen)
         });
         
-        // Push langsung ke memori HP agar tampilan otomatis terkunci
         globalDatabase.push(newAbsen);
         renderGuruDashboard(); 
         
@@ -406,7 +398,6 @@
 
       const today = getTodayString();
       const hariIni = globalDatabase.filter(a => {
-        // Toleransi format yang sama dengan guru
         if (a.date === today) return true;
         try {
           const d = new Date(a.date);
@@ -465,7 +456,6 @@
       csvRows.push(header.join(","));
 
       for (const row of globalDatabase) {
-        // Supaya Excel di PC tidak salah terjemahin tanggal
         let cleanDate = row.date;
         try {
            const d = new Date(row.date);
