@@ -75,7 +75,7 @@
           <div id="status-badge" class="px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500">Belum Absen</div>
         </div>
 
-        <div id="action-area" class="grid grid-cols-1 gap-3">
+        <div id="action-buttons" class="grid grid-cols-1 gap-3">
           <button onclick="submitAbsen('HADIR')" class="group relative overflow-hidden p-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-[2rem] text-left transition-all active:scale-95 shadow-xl shadow-emerald-500/20">
             <i data-lucide="check-circle" class="w-8 h-8 text-white/70 mb-2"></i>
             <h3 class="text-white font-bold text-xl">Hadir Sekarang</h3>
@@ -94,6 +94,14 @@
           </div>
         </div>
 
+        <div id="action-success" class="hidden bg-emerald-50 p-8 rounded-[2rem] text-center border border-emerald-100 shadow-sm">
+          <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+             <i data-lucide="check" class="text-emerald-600 w-8 h-8"></i>
+          </div>
+          <p class="text-emerald-800 font-extrabold text-xl">Sudah Absen!</p>
+          <p class="text-emerald-600 text-sm mt-1 font-medium">Terima kasih atas dedikasi Anda hari ini.</p>
+        </div>
+
         <div class="space-y-4 pt-2">
           <h3 class="font-bold text-slate-800 flex items-center gap-2">
             <i data-lucide="history" class="w-5 h-5 text-emerald-500"></i> Riwayat Bulan Ini
@@ -105,9 +113,16 @@
     </div>
 
     <div id="page-admin" class="hidden flex-1 flex flex-col fade-in">
-      <header class="p-6 bg-white border-b border-slate-100 z-10 sticky top-0">
-        <h2 class="text-xl font-extrabold text-slate-900">Panel Admin</h2>
-        <p class="text-xs text-slate-500 font-medium">Laporan Absensi SDK Kuapuatu</p>
+      <header class="p-6 flex items-center justify-between bg-white/80 backdrop-blur-md border-b border-slate-100 z-10 sticky top-0">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center">
+            <i data-lucide="shield-check" class="w-5 h-5 text-emerald-600"></i>
+          </div>
+          <div>
+            <h2 id="admin-name" class="font-bold text-slate-900 leading-tight">Panel Admin</h2>
+            <p class="text-xs font-medium text-slate-500">Administrator</p>
+          </div>
+        </div>
       </header>
 
       <main class="flex-1 overflow-y-auto p-6 space-y-6 pb-24">
@@ -123,7 +138,7 @@
         </div>
 
         <button onclick="exportToExcel()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-all">
-          <i data-lucide="download" class="w-5 h-5"></i> Unduh Laporan (Excel)
+          <i data-lucide="download" class="w-5 h-5"></i> Unduh Laporan (CSV)
         </button>
 
         <div class="space-y-4">
@@ -169,7 +184,6 @@
       { id: '108', name: 'Yohana Yusarli Nenobesi, S.Pd', role: 'guru' },
       { id: '109', name: 'Stefanus Leli, S.Pd', role: 'guru' },
       { id: '110', name: 'Yohanes Ignasius T. Deku (TU)', role: 'pegawai' },
-      
     ];
 
     let currentUser = null;
@@ -213,31 +227,36 @@
     // === GURU FEATURES ===
     function renderGuruDashboard() {
       document.getElementById('user-name').textContent = currentUser.name;
-      document.getElementById('user-role').textContent = currentUser.role.toUpperCase();
+      
+      if (currentUser.role === 'pegawai') {
+        document.getElementById('user-role').textContent = 'PEGAWAI';
+      } else {
+        document.getElementById('user-role').textContent = 'GURU';
+      }
+      
       document.getElementById('current-date').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
       
       const db = getAttendance();
       const today = new Date().toISOString().split('T')[0];
+      
+      // Mengecek apakah spesifik "user yang login" (currentUser.id) sudah absen hari ini
       const hasAbsen = db.find(a => a.id_user === currentUser.id && a.date === today);
 
       const badge = document.getElementById('status-badge');
-      const actionArea = document.getElementById('action-area');
+      const actionButtons = document.getElementById('action-buttons');
+      const actionSuccess = document.getElementById('action-success');
 
+      // Toggles (Logika menyembunyikan & memunculkan elemen yang sudah diperbaiki)
       if (hasAbsen) {
         badge.textContent = hasAbsen.status;
         badge.className = `px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-slate-100 ${getStatusColor(hasAbsen.status)}`;
-        actionArea.innerHTML = `
-          <div class="bg-emerald-50 p-8 rounded-[2rem] text-center border border-emerald-100 shadow-sm">
-            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-               <i data-lucide="check" class="text-emerald-600 w-8 h-8"></i>
-            </div>
-            <p class="text-emerald-800 font-extrabold text-xl">Sudah Absen!</p>
-            <p class="text-emerald-600 text-sm mt-1 font-medium">Terima kasih atas dedikasi Anda.</p>
-          </div>
-        `;
+        actionButtons.classList.add('hidden'); // Sembunyikan tombol
+        actionSuccess.classList.remove('hidden'); // Munculkan tulisan Sukses
       } else {
         badge.textContent = "Belum Absen";
         badge.className = "px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500";
+        actionButtons.classList.remove('hidden'); // Memunculkan tombol absen kembali
+        actionSuccess.classList.add('hidden'); // Sembunyikan tulisan sukses
       }
 
       // History Guru
@@ -263,6 +282,10 @@
       const db = getAttendance();
       const today = new Date().toISOString().split('T')[0];
       
+      // Cegah absen dobel (Pengaman ekstra)
+      const existing = db.find(a => a.id_user === currentUser.id && a.date === today);
+      if (existing) return;
+
       const newAbsen = {
         id_user: currentUser.id,
         name: currentUser.name,
@@ -274,6 +297,8 @@
 
       db.push(newAbsen);
       localStorage.setItem('absensi_sdk_k', JSON.stringify(db));
+      
+      // Render ulang layar agar memunculkan badge SUDAH ABSEN
       renderGuruDashboard();
     }
 
@@ -296,6 +321,8 @@
 
     // === ADMIN FEATURES ===
     function renderAdminDashboard() {
+      document.getElementById('admin-name').textContent = currentUser.name;
+
       const db = getAttendance();
       const today = new Date().toISOString().split('T')[0];
       const hariIni = db.filter(a => a.date === today && a.status === 'HADIR');
@@ -334,7 +361,6 @@
         return;
       }
 
-      // Membuat format CSV murni bawaan Javascript (Anti Gagal di semua Browser)
       const header = ["ID User", "Nama", "Tanggal", "Jam", "Status", "Keterangan"];
       const csvRows = [];
       csvRows.push(header.join(","));
@@ -351,7 +377,6 @@
         csvRows.push(values.join(","));
       }
 
-      // Proses pengunduhan
       const csvString = csvRows.join("\n");
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
