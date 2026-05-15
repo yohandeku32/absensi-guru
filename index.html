@@ -55,8 +55,8 @@
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100"><i data-lucide="user" class="w-6 h-6 text-emerald-600"></i></div>
             <div>
-                <h2 id="user-name" class="font-bold text-slate-900 leading-tight truncate w-32">Loading...</h2>
-                <p id="user-role-label" class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">GURU</p>
+                <h2 id="user-name" class="font-bold text-slate-900 leading-tight truncate w-32">Memuat...</h2>
+                <p id="user-role-label" class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">GURU / PEGAWAI</p>
             </div>
           </div>
           <button onclick="logout()" class="p-3 rounded-2xl bg-red-50 text-red-500 active:scale-90 transition-transform"><i data-lucide="log-out" class="w-5 h-5"></i></button>
@@ -109,7 +109,14 @@
     </div>
 
     <div id="page-admin" class="hidden min-h-screen py-8 px-4 fade-in">
+        <div class="max-w-4xl mx-auto">
+            <button onclick="logout()" class="mb-4 px-4 py-2 bg-slate-800 text-white rounded-lg font-bold">Logout Admin</button>
+            <div class="bg-white rounded-3xl p-6 shadow-xl border border-slate-100">
+                <h2 class="text-2xl font-bold mb-4">Dashboard Monitoring</h2>
+                <p class="text-slate-500">Data absensi akan muncul di sini (Halaman khusus admin).</p>
+            </div>
         </div>
+    </div>
   </div>
 
   <script>
@@ -143,7 +150,10 @@
       toast.innerHTML = `<div class="text-${color}-500"><i data-lucide="${icon}" class="w-6 h-6"></i></div><div><p class="font-bold text-slate-900 text-sm">${title}</p><p class="text-xs text-slate-500 font-medium">${message}</p></div>`;
       container.appendChild(toast);
       lucide.createIcons();
-      setTimeout(() => { toast.style.animation = 'slideOut 0.5s forwards'; setTimeout(() => toast.remove(), 500); }, 4000);
+      setTimeout(() => { 
+          toast.style.animation = 'slideOut 0.5s forwards'; 
+          setTimeout(() => toast.remove(), 500); 
+      }, 4000);
     }
 
     function getTodayString() {
@@ -169,12 +179,12 @@
       const user = MASTER_USERS.find(u => String(u.id) === idInput && u.role === roleInput);
 
       if (!user) {
-        showToast('Gagal Masuk', 'ID User atau Peran tidak ditemukan.', 'error');
+        showToast('Gagal Masuk', 'ID atau Peran tidak sesuai.', 'error');
         return;
       }
 
       const btn = document.getElementById('btn-login');
-      btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Memuat Data...`;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Memverifikasi...`;
       btn.disabled = true;
       lucide.createIcons();
 
@@ -182,11 +192,12 @@
       await fetchDatabase();
       
       if (user.role === 'admin' || user.role === 'kepsek') {
-        showPage('page-admin'); renderAdminDashboard();
+        showPage('page-admin');
       } else {
-        showPage('page-guru'); renderGuruDashboard();
+        showPage('page-guru');
+        renderGuruDashboard();
       }
-      showToast('Login Berhasil', `Halo, ${user.name}`);
+      showToast('Berhasil', `Selamat datang, ${user.name}`);
     }
 
     function showPage(id) {
@@ -198,22 +209,18 @@
     function renderGuruDashboard() {
       if (!currentUser) return;
       
-      // Update Profil agar tidak "false"
       document.getElementById('user-name').textContent = currentUser.name;
       document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' });
       
       const today = getTodayString();
-      // Pastikan filter ID menggunakan tipe data yang sama (String)
       const myLogs = globalDatabase.filter(a => String(a.id_user) === String(currentUser.id) && a.date === today);
       
       const hasMasuk = myLogs.find(l => l.status === 'MASUK');
       const hasPulang = myLogs.find(l => l.status === 'PULANG');
 
-      // Update Visual Tombol & Pill
       updateButtonVisual('masuk', hasMasuk);
       updateButtonVisual('pulang', hasPulang);
 
-      // Render List Riwayat
       const logContainer = document.getElementById('today-log');
       logContainer.innerHTML = myLogs.length ? myLogs.map(l => `
         <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 fade-in">
@@ -224,7 +231,7 @@
           </div>
           <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
         </div>
-      `).join('') : `<p class="text-center text-slate-300 text-sm italic py-4">Belum ada aktivitas hari ini</p>`;
+      `).join('') : `<p class="text-center text-slate-300 text-sm italic py-4">Belum ada riwayat hari ini</p>`;
       
       lucide.createIcons();
     }
@@ -236,21 +243,19 @@
       const pill = document.getElementById(`status-${type}-pill`);
 
       if (data) {
-        // Jika sudah absen
         btn.disabled = true;
-        btn.classList.remove('hover:border-emerald-500', 'hover:border-orange-500', 'bg-white');
-        btn.classList.add('bg-slate-50', 'border-slate-100', 'opacity-80');
+        btn.classList.replace('bg-white', 'bg-slate-50');
+        btn.classList.add('opacity-70', 'border-slate-200');
         label.innerHTML = `<span class="text-emerald-600 font-bold">Sudah Absen (${data.time})</span>`;
-        icon.className = "w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg";
+        icon.className = "w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center";
         icon.innerHTML = `<i data-lucide="check" class="w-6 h-6"></i>`;
         
         pill.textContent = `${type.toUpperCase()}: ${data.time}`;
         pill.className = "px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-[10px] font-bold border border-emerald-500/20 uppercase";
       } else {
-        // Jika belum absen
         btn.disabled = false;
-        btn.classList.add('bg-white');
-        btn.classList.remove('bg-slate-50', 'opacity-80');
+        btn.classList.replace('bg-slate-50', 'bg-white');
+        btn.classList.remove('opacity-70', 'border-slate-200');
         label.innerText = "Klik untuk upload foto";
         icon.className = `w-12 h-12 ${type === 'masuk' ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'} rounded-2xl flex items-center justify-center`;
         icon.innerHTML = `<i data-lucide="${type === 'masuk' ? 'log-in' : 'log-out'}" class="w-6 h-6"></i>`;
@@ -274,7 +279,7 @@
       const oldContent = container.innerHTML;
       
       // Loading State
-      container.innerHTML = `<div class="flex items-center gap-4 py-2"><i data-lucide="loader-2" class="w-8 h-8 animate-spin text-emerald-500"></i><p class="font-bold text-sm text-emerald-600">Sedang mengirim...</p></div>`;
+      container.innerHTML = `<div class="flex items-center gap-4 py-2"><i data-lucide="loader-2" class="w-8 h-8 animate-spin text-emerald-500"></i><p class="font-bold text-sm text-emerald-600">Mengirim data...</p></div>`;
       lucide.createIcons();
 
       const reader = new FileReader();
@@ -289,20 +294,24 @@
         };
 
         try {
-          // Kirim data ke Google Sheets
+          // Fix False Alarm: Pakai no-cors dan tidak memproses res.json() karena GS redirect 302
           await fetch(GOOGLE_SCRIPT_URL, { 
             method: 'POST', 
-            mode: 'no-cors', 
+            mode: 'no-cors',
             body: JSON.stringify(payload) 
           });
 
-          showToast('Sukses!', `Absen ${currentMode} berhasil terkirim.`);
+          // Sukses (Asumsi karena no-cors tidak bisa baca body response)
+          showToast('Berhasil', `Absen ${currentMode} terkirim.`);
           
-          // Paksa reload database dan render ulang dashboard
-          await fetchDatabase();
-          renderGuruDashboard();
+          // Beri jeda 1.5 detik sebelum sinkronisasi ulang agar data sempat tertulis di Sheet
+          setTimeout(async () => {
+              await fetchDatabase();
+              renderGuruDashboard();
+          }, 1500);
+
         } catch (err) {
-          showToast('Error', 'Gagal mengirim data. Coba lagi.', 'error');
+          showToast('Error', 'Gagal koneksi ke server.', 'error');
           container.innerHTML = oldContent;
           lucide.createIcons();
         }
@@ -312,8 +321,6 @@
     }
 
     function logout() { location.reload(); }
-    
-    // Initial Icons
     lucide.createIcons();
   </script>
 </body>
