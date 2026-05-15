@@ -8,18 +8,47 @@
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background-color: #f8fafc; }
+    * { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+    body { background-color: #f8fafc; margin: 0; padding: 0; }
+    
     .fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     
-    /* Global Loader */
-    .loader-spin { border: 4px solid #f3f3f3; border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-    .loader-small { border: 2px solid #f3f3f3; border-top: 2px solid #10b981; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; }
+    /* Global Loader - Pasti di Tengah */
+    #global-loader { 
+      position: fixed; 
+      inset: 0; 
+      background: #ffffff; 
+      z-index: 9999; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center;    /* Tengah Horizontal */
+      justify-content: center; /* Tengah Vertikal */
+      gap: 1.5rem; 
+      transition: opacity 0.3s ease; 
+    }
+
+    .loader-spin { 
+      border: 5px solid #f3f3f3; 
+      border-top: 5px solid #10b981; 
+      border-radius: 50%; 
+      width: 50px; 
+      height: 50px; 
+      animation: spin 1s linear infinite; 
+    }
+
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
-    #global-loader { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; items-center; justify-content: center; gap: 1rem; transition: opacity 0.3s ease; }
-    
+    .loader-small { 
+      border: 2px solid #f3f3f3; 
+      border-top: 2px solid #10b981; 
+      border-radius: 50%; 
+      width: 16px; 
+      height: 16px; 
+      animation: spin 1s linear infinite; 
+      display: inline-block; 
+    }
+
     @media print { .no-print { display: none !important; } }
   </style>
 </head>
@@ -27,7 +56,10 @@
 
   <div id="global-loader">
     <div class="loader-spin"></div>
-    <p class="text-slate-500 font-bold animate-pulse">Menyiapkan Data...</p>
+    <div class="text-center px-6">
+      <h2 class="text-slate-900 font-extrabold text-xl mb-1">SDK St.Yoseph Kuaputu</h2>
+      <p id="loader-text" class="text-emerald-500 font-bold animate-pulse text-xs uppercase tracking-[0.2em]">Menyiapkan Data...</p>
+    </div>
   </div>
 
   <div id="app" class="flex-1 w-full relative">
@@ -40,7 +72,7 @@
         <h1 class="text-3xl font-extrabold text-slate-900">SDK St.Yoseph Kuaputu</h1>
         <p class="text-slate-500 mt-2 mb-8 uppercase tracking-widest text-xs font-bold">Sistem Absensi Foto</p>
         <div class="space-y-5 text-left">
-          <select id="login-role" class="w-full px-5 py-4 bg-slate-50 border rounded-2xl outline-none font-medium text-slate-700 border-slate-200">
+          <select id="login-role" class="w-full px-5 py-4 bg-slate-50 border rounded-2xl outline-none font-medium text-slate-700 border-slate-200 focus:ring-2 focus:ring-emerald-500/20">
             <option value="guru">Guru</option>
             <option value="kepsek">Kepala Sekolah</option>
             <option value="admin">Administrator</option>
@@ -119,18 +151,20 @@
             </div>
 
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-50 text-slate-600 border-b">
-                        <tr class="text-[11px] font-bold uppercase tracking-wider">
-                            <th class="p-4 text-center border-r w-12">No</th>
-                            <th class="p-4 border-r">Nama Lengkap</th>
-                            <th class="p-4 text-center border-r">Tanggal</th>
-                            <th class="p-4 text-center border-r">Masuk</th>
-                            <th class="p-4 text-center">Pulang</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-detail-body" class="divide-y text-sm"></tbody>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead class="bg-slate-50 text-slate-600 border-b">
+                            <tr class="text-[11px] font-bold uppercase tracking-wider">
+                                <th class="p-4 text-center border-r w-12">No</th>
+                                <th class="p-4 border-r">Nama Lengkap</th>
+                                <th class="p-4 text-center border-r">Tanggal</th>
+                                <th class="p-4 text-center border-r">Masuk</th>
+                                <th class="p-4 text-center">Pulang</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-detail-body" class="divide-y text-sm"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -165,7 +199,7 @@
     };
 
     async function initApp() {
-        showGlobalLoader("Memuat database...");
+        showGlobalLoader("Sinkronisasi Database...");
         await fetchDatabase();
         if (currentUser.role === 'admin') { 
             showPage('page-admin'); 
@@ -179,7 +213,7 @@
 
     function showGlobalLoader(text = "Menyiapkan Data...") {
         const loader = document.getElementById('global-loader');
-        loader.querySelector('p').textContent = text;
+        document.getElementById('loader-text').textContent = text;
         loader.style.display = 'flex';
         loader.style.opacity = '1';
     }
@@ -250,7 +284,6 @@
     async function processUpload(event) {
         const file = event.target.files[0]; if (!file) return;
         
-        // Disable tombol & beri loading lokal
         const btn = document.getElementById(`btn-absen-${currentMode.toLowerCase()}`);
         const originalHTML = btn.innerHTML;
         btn.disabled = true;
@@ -294,7 +327,7 @@
 
     function closeModal() {
         document.getElementById('modal-success').classList.add('hidden');
-        location.reload(); // Ini akan memicu Global Loader saat refresh
+        location.reload();
     }
 
     function renderAdminDetail() {
@@ -336,7 +369,7 @@
             
             localStorage.setItem('absen_user_session', JSON.stringify(user)); 
             currentUser = user;
-            await initApp(); // Pindah ke dashboard dengan Global Loader
+            await initApp();
         } else { 
             alert("ID atau Peran salah!"); 
         }
