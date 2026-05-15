@@ -110,11 +110,80 @@
 
     <div id="page-admin" class="hidden min-h-screen py-8 px-4 fade-in">
         <div class="max-w-4xl mx-auto">
-            <button onclick="logout()" class="mb-4 px-4 py-2 bg-slate-800 text-white rounded-lg font-bold">Logout Admin</button>
-            <div class="bg-white rounded-3xl p-6 shadow-xl border border-slate-100">
-                <h2 class="text-2xl font-bold mb-4">Dashboard Monitoring</h2>
-                <p class="text-slate-500">Data absensi (Khusus Admin).</p>
+            
+            <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+              <div>
+                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Panel Administrator</h2>
+                <p class="text-slate-500 font-medium mt-1 text-sm">Sistem Informasi Absensi SDK St. Yoseph</p>
+              </div>
+              <button onclick="logout()" class="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl font-bold transition-all shadow-sm flex items-center gap-2">
+                <i data-lucide="log-out" class="w-5 h-5"></i> Keluar
+              </button>
+            </header>
+
+            <div class="bg-white rounded-3xl p-6 lg:p-8 shadow-xl border border-slate-100 mb-8">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><i data-lucide="calendar-days" class="w-6 h-6"></i></div>
+                  <div>
+                    <h3 class="text-xl font-bold text-slate-900">Rekapitulasi Bulanan</h3>
+                    <p class="text-sm text-slate-500">Total absen masuk & pulang staf</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                  <label class="text-sm font-bold text-slate-600">Pilih Bulan:</label>
+                  <select id="filter-bulan" onchange="renderAdminRekap()" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none font-bold text-slate-700">
+                    <option value="01">Januari</option>
+                    <option value="02">Februari</option>
+                    <option value="03">Maret</option>
+                    <option value="04">April</option>
+                    <option value="05">Mei</option>
+                    <option value="06">Juni</option>
+                    <option value="07">Juli</option>
+                    <option value="08">Agustus</option>
+                    <option value="09">September</option>
+                    <option value="10">Oktober</option>
+                    <option value="11">November</option>
+                    <option value="12">Desember</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto rounded-xl border border-slate-100">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 text-slate-600 text-sm uppercase tracking-wider">
+                      <th class="p-4 font-bold border-b border-slate-100 w-12 text-center">No</th>
+                      <th class="p-4 font-bold border-b border-slate-100">Nama Guru / Pegawai</th>
+                      <th class="p-4 font-bold border-b border-slate-100 text-center text-emerald-600">Total Masuk</th>
+                      <th class="p-4 font-bold border-b border-slate-100 text-center text-orange-600">Total Pulang</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-rekap-body" class="text-sm">
+                    </tbody>
+                </table>
+              </div>
             </div>
+
+            <div class="bg-white rounded-3xl p-6 lg:p-8 shadow-xl border border-red-100 relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-32 h-32 bg-red-50 rounded-full blur-2xl opacity-50 pointer-events-none"></div>
+                <div class="flex items-start gap-5 relative z-10">
+                  <div class="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 text-red-500 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="server-crash" class="w-8 h-8"></i>
+                  </div>
+                  <div>
+                    <h2 class="text-xl font-bold text-slate-900 mb-2">Reset Data Keseluruhan</h2>
+                    <p class="text-slate-500 mb-6 leading-relaxed text-sm">
+                      Tindakan ini akan <b class="text-red-500">menghapus permanen</b> seluruh data riwayat absen di Spreadsheet. Lakukan ini hanya saat pergantian semester / tahun ajaran baru.
+                    </p>
+                    <button id="btn-reset" onclick="resetDatabase()" class="px-5 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-500/30 transition-all active:scale-95 flex items-center gap-2">
+                      <i data-lucide="alert-triangle" class="w-5 h-5"></i> Kosongkan Sheet
+                    </button>
+                  </div>
+                </div>
+            </div>
+            
         </div>
     </div>
   </div>
@@ -142,28 +211,29 @@
     let globalDatabase = [];
     let currentMode = '';
 
-    // ==========================================
-    // FITUR: CEK SESI LOGIN SAAT WEB DIBUKA
-    // ==========================================
     window.onload = async function() {
       const savedUser = localStorage.getItem('absen_user_session');
       
+      // Set default bulan di dropdown Admin ke bulan saat ini
+      const currentMonthIndex = String(new Date().getMonth() + 1).padStart(2, '0');
+      document.getElementById('filter-bulan').value = currentMonthIndex;
+
       if (savedUser) {
-        // Jika ada data login di memori browser
         currentUser = JSON.parse(savedUser);
         
-        if (currentUser.role === 'admin' || currentUser.role === 'kepsek') {
+        showToast('Menyinkronkan', 'Mengambil data dari server...', 'success');
+        await fetchDatabase();
+
+        if (currentUser.role === 'admin') {
           showPage('page-admin');
+          renderAdminRekap(); // Panggil fungsi rekap saat masuk admin
         } else {
           showPage('page-guru');
           document.getElementById('user-name').textContent = currentUser.name;
-          showToast('Menyinkronkan', 'Mengambil data riwayat terbaru...', 'success');
-          
-          await fetchDatabase();
+          document.getElementById('user-role-label').textContent = (currentUser.role === 'kepsek') ? 'KEPALA SEKOLAH' : 'GURU / PEGAWAI';
           renderGuruDashboard();
         }
       } else {
-        // Jika tidak ada memori login, tampilkan form login
         showPage('page-login');
       }
       lucide.createIcons();
@@ -207,7 +277,7 @@
       const user = MASTER_USERS.find(u => String(u.id) === idInput && u.role === roleInput);
 
       if (!user) {
-        showToast('Gagal Masuk', 'ID atau Peran tidak sesuai.', 'error');
+        showToast('Gagal Masuk', 'NIP/ID atau Peran tidak sesuai.', 'error');
         return;
       }
 
@@ -216,21 +286,22 @@
       btn.disabled = true;
       lucide.createIcons();
 
-      // SIMPAN SESI KE MEMORI BROWSER
       currentUser = user;
       localStorage.setItem('absen_user_session', JSON.stringify(user));
-
-      await fetchDatabase();
       
-      if (user.role === 'admin' || user.role === 'kepsek') {
+      await fetchDatabase();
+
+      if (user.role === 'admin') {
         showPage('page-admin');
+        renderAdminRekap();
       } else {
         showPage('page-guru');
+        document.getElementById('user-name').textContent = user.name;
+        document.getElementById('user-role-label').textContent = (user.role === 'kepsek') ? 'KEPALA SEKOLAH' : 'GURU / PEGAWAI';
         renderGuruDashboard();
       }
       showToast('Berhasil', `Selamat datang, ${user.name}`);
       
-      // Kembalikan tombol login seperti semula jika nanti logout
       btn.innerHTML = `Masuk Sekarang`;
       btn.disabled = false;
     }
@@ -241,15 +312,15 @@
       lucide.createIcons();
     }
 
+    // ==========================================
+    // LOGIKA DASHBOARD GURU
+    // ==========================================
     function renderGuruDashboard() {
       if (!currentUser) return;
       
-      document.getElementById('user-name').textContent = currentUser.name;
       document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' });
-      
       const today = getTodayString();
       
-      // Pencarian Riwayat HANYA untuk hari ini (Otomatis reset jika besok)
       const myLogs = globalDatabase.filter(a => {
          const isUser = String(a.id_user) === String(currentUser.id);
          const isToday = String(a.date).includes(today);
@@ -370,11 +441,93 @@
     }
 
     // ==========================================
-    // FITUR: LOGOUT MENGHAPUS SESI DARI MEMORI
+    // LOGIKA ADMIN: REKAP BULANAN
     // ==========================================
+    function renderAdminRekap() {
+      const selectedMonth = document.getElementById('filter-bulan').value; // Contoh: "05"
+      const currentYear = new Date().getFullYear(); // Ambil tahun saat ini
+      const prefixDate = `${currentYear}-${selectedMonth}`; // Contoh: "2024-05"
+
+      // Saring data base berdasarkan bulan & tahun yang dipilih
+      const filteredData = globalDatabase.filter(log => String(log.date).startsWith(prefixDate));
+
+      // Buat kerangka rekap untuk semua guru/staf (kecuali admin)
+      let rekapGuru = {};
+      MASTER_USERS.forEach(u => {
+        if (u.role !== 'admin') {
+          rekapGuru[u.id] = { name: u.name, masuk: 0, pulang: 0 };
+        }
+      });
+
+      // Hitung dari data yang tersaring
+      filteredData.forEach(log => {
+        if (rekapGuru[log.id_user]) {
+          if (log.status === 'MASUK') rekapGuru[log.id_user].masuk += 1;
+          if (log.status === 'PULANG') rekapGuru[log.id_user].pulang += 1;
+        }
+      });
+
+      // Render ke tabel
+      const tbody = document.getElementById('table-rekap-body');
+      const dataArray = Object.values(rekapGuru);
+      
+      if (dataArray.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Belum ada data guru</td></tr>`;
+        return;
+      }
+
+      let htmlRows = '';
+      dataArray.forEach((user, index) => {
+        htmlRows += `
+          <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">
+            <td class="p-4 font-medium text-slate-500 text-center">${index + 1}</td>
+            <td class="p-4 font-bold text-slate-800">${user.name}</td>
+            <td class="p-4 text-center font-bold text-emerald-600 bg-emerald-50/30">${user.masuk} <span class="text-xs font-normal text-emerald-500/70 ml-1">kali</span></td>
+            <td class="p-4 text-center font-bold text-orange-600 bg-orange-50/30">${user.pulang} <span class="text-xs font-normal text-orange-500/70 ml-1">kali</span></td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = htmlRows;
+    }
+
+    // ==========================================
+    // LOGIKA ADMIN: RESET SHEET
+    // ==========================================
+    async function resetDatabase() {
+      const konfirmasi = confirm("PERINGATAN KERAS:\n\nApakah Anda YAKIN ingin MENGHAPUS SEMUA DATA absensi di Spreadsheet? Tindakan ini tidak bisa dibatalkan!");
+      if (!konfirmasi) return;
+
+      const btn = document.getElementById('btn-reset');
+      const oldHtml = btn.innerHTML;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Sedang Menghapus...`;
+      btn.disabled = true;
+      lucide.createIcons();
+
+      const payload = { action: 'clear' };
+
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, { 
+          method: 'POST', 
+          mode: 'no-cors',
+          body: JSON.stringify(payload) 
+        });
+
+        showToast('Berhasil', 'Semua riwayat data di Spreadsheet telah dikosongkan.', 'success');
+        globalDatabase = []; // Kosongkan
+        renderAdminRekap();  // Refresh tabel rekap menjadi 0 semua
+      } catch (err) {
+        showToast('Error', 'Gagal mengirim perintah reset ke server.', 'error');
+      } finally {
+        btn.innerHTML = oldHtml;
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
     function logout() { 
-      localStorage.removeItem('absen_user_session'); // Hapus data login
-      location.reload(); // Refresh halaman (akan otomatis kembali ke login)
+      localStorage.removeItem('absen_user_session');
+      location.reload(); 
     }
   </script>
 </body>
