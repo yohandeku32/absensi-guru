@@ -92,13 +92,23 @@
               <div><h2 class="text-2xl font-extrabold text-slate-900">Panel Administrator</h2><p class="text-slate-500 text-sm font-medium">Rekapitulasi Absensi</p></div>
               <button onclick="logout()" class="px-5 py-2 bg-red-50 text-red-600 rounded-lg font-bold flex items-center gap-2"><i data-lucide="log-out" class="w-4 h-4"></i> Keluar</button>
             </header>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 no-print">
                 <select id="admin-filter-guru" onchange="renderAdminDetail()" class="p-4 bg-white border rounded-2xl outline-none"><option value="">-- Semua Guru --</option></select>
                 <select id="admin-filter-bulan" onchange="renderAdminDetail()" class="p-4 bg-white border rounded-2xl outline-none">
                     <option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option><option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option><option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
                 </select>
             </div>
-            <div class="flex justify-end mb-4 no-print"><button onclick="window.print()" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg flex items-center gap-2"><i data-lucide="printer" class="w-5 h-5"></i> Cetak Laporan</button></div>
+
+            <div class="flex justify-end gap-3 mb-4 no-print">
+                <button id="btn-reset-data" onclick="handleResetData()" class="px-6 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg flex items-center gap-2 hover:bg-red-700 transition-all active:scale-95">
+                    <i data-lucide="trash-2" class="w-5 h-5"></i> Reset Semua Data
+                </button>
+                <button onclick="window.print()" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg flex items-center gap-2 hover:bg-blue-700 transition-all active:scale-95">
+                    <i data-lucide="printer" class="w-5 h-5"></i> Cetak Laporan
+                </button>
+            </div>
+
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-slate-50 text-slate-600 border-b">
@@ -161,7 +171,6 @@
         const today = new Date().toISOString().split('T')[0];
         const myLogs = globalDatabase.filter(a => String(a.id_user) === String(currentUser.id) && String(a.date) === today);
         
-        // Identifikasi data masuk & pulang dari riwayat
         const dataMasuk = myLogs.find(l => l.status === 'MASUK' || l.status === 'MASUK & PULANG');
         const dataPulang = myLogs.find(l => l.status === 'PULANG' || l.status === 'MASUK & PULANG');
 
@@ -195,7 +204,6 @@
                 txt.textContent = `Sudah Absen (${jamMasuk})`;
                 pill.textContent = `MASUK: ${jamMasuk}`;
             } else {
-                // Untuk Pulang, tampilkan range di tombol, tapi jam akhir saja di pill profil
                 txt.textContent = `Sudah Absen (${data.time})`;
                 const jamPulangSaja = data.time.includes(' - ') ? data.time.split(' - ')[1] : data.time;
                 pill.textContent = `PULANG: ${jamPulangSaja}`;
@@ -234,9 +242,35 @@
         reader.readAsDataURL(file);
     }
 
+    // FUNGSI RESET DATA UNTUK ADMIN
+    async function handleResetData() {
+        const confirmHapus = confirm("⚠️ PERINGATAN: Apakah Anda yakin ingin menghapus SEMUA data absensi di Spreadsheet? Tindakan ini tidak bisa dibatalkan!");
+        if (!confirmHapus) return;
+
+        const btn = document.getElementById('btn-reset-data');
+        const oldContent = btn.innerHTML;
+        btn.innerHTML = '<div class="loader mr-2"></div> Menghapus...';
+        btn.disabled = true;
+
+        try {
+            const payload = { action: 'clear' };
+            await fetch(GOOGLE_SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify(payload) 
+            });
+            alert("Data Spreadsheet berhasil dikosongkan!");
+            location.reload();
+        } catch (err) {
+            alert("Gagal menghapus data.");
+            btn.innerHTML = oldContent;
+            btn.disabled = false;
+        }
+    }
+
     function closeModal() {
         document.getElementById('modal-success').classList.add('hidden');
-        location.reload(); // Reload untuk mereset semua state dan refresh data
+        location.reload();
     }
 
     function renderAdminDetail() {
@@ -244,7 +278,6 @@
         const selBulan = document.getElementById('admin-filter-bulan').value;
         const prefix = `${new Date().getFullYear()}-${selBulan}`;
         
-        // Populate Guru Filter once
         const selGuru = document.getElementById('admin-filter-guru');
         if (selGuru.options.length <= 1) {
             MASTER_USERS.filter(u => u.role !== 'admin').forEach(u => {
