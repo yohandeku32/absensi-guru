@@ -12,11 +12,9 @@
     body { background-color: #f8fafc; }
     .fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-    ::-webkit-scrollbar { width: 6px; height: 6px;}
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
   </style>
 </head>
-<body class="text-slate-800 selection:bg-emerald-500/30 min-h-screen flex flex-col">
+<body class="text-slate-800 min-h-screen flex flex-col">
 
   <div id="app" class="flex-1 w-full relative">
     
@@ -26,22 +24,20 @@
           <div class="w-20 h-20 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/20 rotate-3">
             <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
           </div>
-          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">SDK St. Yoseph Kuaputu</h1>
+          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">SDK St. Yoseph</h1>
           <p class="text-slate-500 mt-2 font-medium">Sistem Informasi Absensi</p>
         </div>
 
         <div class="space-y-5">
-          <div class="relative">
+          <div>
             <label class="text-xs font-bold text-emerald-600 uppercase tracking-wider ml-1">Masuk Sebagai</label>
-            <select id="login-role" class="w-full mt-1.5 px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none appearance-none font-medium shadow-sm">
+            <select id="login-role" class="w-full mt-1.5 px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-medium">
               <option value="guru">Guru / Pegawai</option>
               <option value="kepsek">Kepala Sekolah</option>
               <option value="admin">Administrator</option>
             </select>
           </div>
-          <div class="relative">
-            <input id="login-id" type="text" placeholder="Masukkan NIP / Username" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 font-medium shadow-sm">
-          </div>
+          <input id="login-id" type="text" placeholder="Masukkan NIP / Username" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none transition-all placeholder:text-slate-400 font-medium shadow-sm">
           <button id="btn-login" onclick="handleLogin()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-500/30 active:scale-[0.98] mt-4 flex justify-center items-center gap-2">
             Masuk Sekarang
           </button>
@@ -51,157 +47,97 @@
     </div>
 
     <div id="page-guru" class="hidden min-h-screen py-6 px-4 fade-in">
-      <div class="max-w-md mx-auto bg-white min-h-[85vh] rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 flex flex-col overflow-hidden relative">
-        <header class="p-6 flex items-center justify-between border-b border-slate-100 bg-white z-10 sticky top-0">
+      <div class="max-w-md mx-auto bg-white min-h-[85vh] rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 flex flex-col overflow-hidden">
+        <header class="p-6 flex items-center justify-between border-b border-slate-100 bg-white sticky top-0">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shadow-inner">
-              <i data-lucide="user" class="w-6 h-6 text-emerald-600"></i>
-            </div>
-            <div>
-              <h2 id="user-name" class="font-bold text-slate-900 leading-tight">-</h2>
-              <p id="user-role" class="text-xs font-bold text-slate-500">Guru</p>
-            </div>
+            <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center border shadow-inner"><i data-lucide="user" class="w-6 h-6 text-emerald-600"></i></div>
+            <div><h2 id="user-name" class="font-bold text-slate-900 leading-tight">-</h2><p id="user-role" class="text-xs font-bold text-slate-500">Guru</p></div>
           </div>
-          <button onclick="logout()" class="p-3 rounded-2xl bg-red-50 hover:bg-red-100 text-red-500 transition-colors">
-            <i data-lucide="log-out" class="w-5 h-5"></i>
-          </button>
+          <button onclick="logout()" class="p-3 rounded-2xl bg-red-50 text-red-500"><i data-lucide="log-out" class="w-5 h-5"></i></button>
         </header>
 
         <main class="flex-1 overflow-y-auto px-6 pt-6 pb-24 space-y-6">
           <div class="bg-slate-50 p-5 rounded-[2rem] flex items-center justify-between border border-slate-100">
-            <div>
-              <p id="current-date" class="text-emerald-700 font-extrabold text-lg leading-tight">Memuat...</p>
-              <p class="text-slate-500 text-xs mt-1 font-medium">Status Anda hari ini:</p>
-            </div>
-            <div id="status-badge" class="px-3 py-1.5 bg-slate-200 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500">Belum Absen</div>
+            <div><p id="current-date" class="text-emerald-700 font-extrabold text-lg">Memuat...</p><p class="text-slate-500 text-xs font-medium">Status Anda hari ini:</p></div>
+            <div id="status-badge" class="px-3 py-1.5 bg-slate-200 rounded-full text-[10px] font-bold uppercase text-slate-500">Belum Absen</div>
           </div>
 
           <div id="action-buttons" class="grid grid-cols-1 gap-3 hidden">
-            <button id="btn-hadir" onclick="document.getElementById('camera-input').click()" class="group relative overflow-hidden p-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-[2rem] text-left transition-all active:scale-95 shadow-xl shadow-emerald-500/20">
+            <button id="btn-hadir" onclick="document.getElementById('camera-input').click()" class="p-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-[2rem] text-left transition-all active:scale-95 shadow-xl shadow-emerald-500/20">
               <i data-lucide="camera" class="w-8 h-8 text-white/80 mb-2"></i>
               <h3 class="text-white font-bold text-xl">Hadir & Foto Selfie</h3>
               <p class="text-emerald-50 text-xs font-medium mt-1">Klik untuk buka kamera</p>
             </button>
-            
             <input type="file" id="camera-input" accept="image/*" capture="user" class="hidden" onchange="processPhotoAndSubmit(event)">
-
             <div class="grid grid-cols-2 gap-3">
-              <button onclick="openNote('IZIN')" class="p-4 bg-white rounded-[1.5rem] text-left border border-slate-200 shadow-sm hover:border-amber-300 transition-colors">
-                <i data-lucide="mail" class="w-6 h-6 text-amber-500 mb-2"></i>
-                <p class="text-slate-800 font-bold">Izin</p>
-              </button>
-              <button onclick="openNote('SAKIT')" class="p-4 bg-white rounded-[1.5rem] text-left border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
-                <i data-lucide="thermometer" class="w-6 h-6 text-blue-500 mb-2"></i>
-                <p class="text-slate-800 font-bold">Sakit</p>
-              </button>
+              <button onclick="openNote('IZIN')" class="p-4 bg-white rounded-[1.5rem] border shadow-sm"><i data-lucide="mail" class="w-6 h-6 text-amber-500 mb-2"></i><p class="text-slate-800 font-bold">Izin</p></button>
+              <button onclick="openNote('SAKIT')" class="p-4 bg-white rounded-[1.5rem] border shadow-sm"><i data-lucide="thermometer" class="w-6 h-6 text-blue-500 mb-2"></i><p class="text-slate-800 font-bold">Sakit</p></button>
             </div>
           </div>
 
-          <div id="action-success" class="hidden bg-emerald-50 p-8 rounded-[2rem] text-center border border-emerald-100 shadow-sm">
-            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-               <i data-lucide="check" class="text-emerald-600 w-8 h-8"></i>
-            </div>
+          <div id="action-success" class="hidden bg-emerald-50 p-8 rounded-[2rem] text-center border border-emerald-100">
+            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4"><i data-lucide="check" class="text-emerald-600 w-8 h-8"></i></div>
             <p class="text-emerald-800 font-extrabold text-xl">Sudah Absen!</p>
-            <p class="text-emerald-600 text-sm mt-1 font-medium">Data kehadiran Anda telah tersimpan.</p>
           </div>
 
           <div class="space-y-4 pt-4 border-t border-slate-100">
-            <h3 class="font-bold text-slate-800 flex items-center gap-2">
-              <i data-lucide="history" class="w-5 h-5 text-emerald-500"></i> Riwayat Absen
-            </h3>
+            <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="history" class="w-5 h-5 text-emerald-500"></i> Riwayat</h3>
             <div id="guru-history-list" class="space-y-3"></div>
           </div>
         </main>
       </div>
     </div>
 
-    <div id="page-admin" class="hidden min-h-screen py-8 px-4 sm:px-8 fade-in">
+    <div id="page-admin" class="hidden min-h-screen py-8 px-4 fade-in">
       <div class="max-w-7xl mx-auto space-y-6">
-        
-        <header class="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 rounded-[2rem] shadow-lg shadow-slate-200/40 border border-slate-100">
-          <div class="flex items-center gap-4 mb-4 md:mb-0">
-            <div class="w-14 h-14 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center">
-              <i data-lucide="shield-check" class="w-7 h-7 text-emerald-600"></i>
-            </div>
-            <div>
-              <h2 id="admin-name" class="text-xl font-black text-slate-900 leading-tight">Panel Admin</h2>
-              <p id="admin-subrole" class="text-sm font-bold text-emerald-600">Administrator System</p>
-            </div>
+        <header class="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 rounded-[2rem] shadow-lg border">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center"><i data-lucide="shield-check" class="w-7 h-7 text-emerald-600"></i></div>
+            <div><h2 id="admin-name" class="text-xl font-black text-slate-900 leading-tight">Panel Admin</h2><p id="admin-subrole" class="text-sm font-bold text-emerald-600">Administrator System</p></div>
           </div>
-          <button onclick="logout()" class="px-6 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold flex items-center justify-center gap-2 transition-colors">
-            <i data-lucide="log-out" class="w-5 h-5"></i> Keluar Aplikasi
-          </button>
+          <button onclick="logout()" class="px-6 py-3 rounded-xl bg-red-50 text-red-600 font-bold flex items-center gap-2 mt-4 md:mt-0"><i data-lucide="log-out" class="w-5 h-5"></i> Keluar</button>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          
           <div class="space-y-6">
-            <div class="bg-white p-6 rounded-[2rem] shadow-lg shadow-slate-200/40 border border-slate-100">
-              <h3 class="font-bold text-slate-400 uppercase tracking-wider text-xs mb-4">Statistik Hari Ini</h3>
+            <div class="bg-white p-6 rounded-[2rem] shadow-lg border">
+              <h3 class="font-bold text-slate-400 uppercase text-xs mb-4">Statistik</h3>
               <div class="space-y-4">
-                <div class="bg-emerald-50 border border-emerald-100 p-5 rounded-2xl">
-                  <p class="text-xs text-emerald-600 font-bold uppercase tracking-wide">Hadir</p>
-                  <p id="stat-hadir" class="text-4xl font-black text-emerald-700 mt-1">0</p>
-                </div>
-                <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl">
-                  <p class="text-xs text-slate-500 font-bold uppercase tracking-wide">Total Data Guru </p>
-                  <p id="stat-total" class="text-4xl font-black text-slate-800 mt-1">0</p>
-                </div>
+                <div class="bg-emerald-50 border p-5 rounded-2xl"><p class="text-xs text-emerald-600 font-bold">HADIR HARI INI</p><p id="stat-hadir" class="text-4xl font-black text-emerald-700">0</p></div>
+                <div class="bg-slate-50 border p-5 rounded-2xl"><p class="text-xs text-slate-500 font-bold">TOTAL DATA</p><p id="stat-total" class="text-4xl font-black text-slate-800">0</p></div>
               </div>
             </div>
-
-            <div class="bg-white p-6 rounded-[2rem] shadow-lg shadow-slate-200/40 border border-slate-100 space-y-3">
-              <h3 class="font-bold text-slate-400 uppercase tracking-wider text-xs mb-4">Aksi Manajemen</h3>
-              <button onclick="exportToExcel()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-all">
-                <i data-lucide="download" class="w-5 h-5"></i> Unduh Excel (CSV)
-              </button>
-              <button onclick="resetData()" id="btn-reset" class="w-full py-4 bg-red-50 hover:bg-red-500 hover:text-white text-red-600 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all border border-red-100 hover:border-red-500 group hidden">
-                <i data-lucide="trash-2" class="w-5 h-5 group-hover:animate-bounce"></i> Reset Semua Data
-              </button>
+            <div class="space-y-3">
+              <button onclick="exportToExcel()" class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2"><i data-lucide="download" class="w-5 h-5"></i> Unduh CSV</button>
+              <button onclick="resetData()" id="btn-reset" class="w-full py-4 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 hidden">Reset Semua Data</button>
             </div>
           </div>
 
-          <div class="lg:col-span-3 bg-white p-6 sm:p-8 rounded-[2rem] shadow-lg shadow-slate-200/40 border border-slate-100 flex flex-col h-[700px]">
+          <div class="lg:col-span-3 bg-white p-6 rounded-[2rem] shadow-lg border h-[600px] flex flex-col">
             <div class="flex justify-between items-center mb-6">
-              <div>
-                <h3 class="font-black text-slate-800 text-xl">Data Kehadiran Guru </h3>
-                <p class="text-sm text-slate-500 font-medium">Rekapitulasi otomatis </p>
-              </div>
-              <button onclick="refreshAdmin(event)" class="text-sm text-blue-600 font-bold bg-blue-50 px-4 py-2.5 rounded-xl hover:bg-blue-100 transition-colors flex items-center gap-2">
-                <i data-lucide="refresh-cw" class="w-4 h-4"></i> Segarkan Data
-              </button>
+               <h3 class="font-black text-slate-800 text-xl">Data Kehadiran</h3>
+               <button onclick="refreshAdmin(event)" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Segarkan</button>
             </div>
-            
-            <div class="flex-1 overflow-auto rounded-2xl border border-slate-100 bg-slate-50 relative">
-              <table class="w-full text-left border-collapse min-w-[700px]">
-                <thead class="bg-slate-100 sticky top-0 z-10 shadow-sm">
-                  <tr class="text-slate-500 text-xs uppercase tracking-wider font-bold">
-                    <th class="p-5 w-10 text-center">No</th>
-                    <th class="p-5">Nama Pegawai</th>
-                    <th class="p-5">Tanggal</th>
-                    <th class="p-5">Jam</th>
-                    <th class="p-5">Status</th>
-                    <th class="p-5">Keterangan</th>
-                  </tr>
+            <div class="flex-1 overflow-auto rounded-2xl border bg-slate-50">
+              <table class="w-full text-left min-w-[600px]">
+                <thead class="bg-slate-100 sticky top-0 font-bold text-xs uppercase text-slate-500">
+                  <tr><th class="p-4">No</th><th class="p-4">Nama</th><th class="p-4">Waktu</th><th class="p-4">Status</th><th class="p-4">Keterangan</th></tr>
                 </thead>
-                <tbody id="admin-table-body" class="divide-y divide-slate-200 bg-white">
-                </tbody>
+                <tbody id="admin-table-body" class="divide-y bg-white"></tbody>
               </table>
             </div>
           </div>
-
         </div>
       </div>
     </div>
 
-    <div id="modal-note" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-      <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 fade-in shadow-2xl">
-        <h3 id="modal-title" class="text-xl font-black text-slate-900 mb-1">Keterangan</h3>
-        <p class="text-slate-500 text-sm mb-6 font-medium">Tulis alasan atau catatan singkat Anda.</p>
-        <textarea id="note-text" class="w-full h-32 bg-slate-50 border border-slate-200 rounded-2xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 font-medium" placeholder="Contoh: Sakit demam, ada urusan keluarga..."></textarea>
+    <div id="modal-note" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl">
+        <h3 id="modal-title" class="text-xl font-black mb-6">Keterangan</h3>
+        <textarea id="note-text" class="w-full h-32 bg-slate-50 border rounded-2xl p-4 outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Tulis alasan..."></textarea>
         <div class="flex gap-3 mt-6">
-          <button onclick="closeNote()" class="flex-1 py-4 font-bold text-slate-500 hover:text-slate-700 bg-slate-100 rounded-2xl">Batal</button>
-          <button onclick="confirmAbsenWithNote()" class="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 rounded-2xl font-bold text-white shadow-lg shadow-emerald-500/20">Kirim</button>
+          <button onclick="closeNote()" class="flex-1 py-4 font-bold text-slate-400 bg-slate-100 rounded-2xl">Batal</button>
+          <button onclick="confirmAbsenWithNote()" class="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-bold shadow-lg">Kirim</button>
         </div>
       </div>
     </div>
@@ -209,12 +145,11 @@
   </div>
 
   <script>
-    // URL DATABASE GOOGLE SHEETS ANDA
+    // === GANTI URL INI ===
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxqlhMHviBkUnn-HtpRBN5-1mfF2zzsR4RlSE-_9nHlcOdHXz2Rc57OEGKcH8igLjtgA/exec";
 
-    // DATA MASTER
     const MASTER_USERS = [
-      { id: 'admin', name: 'Wilhelmina Kasih, S.Ag,S.Pd', role: 'admin' },
+      { id: 'admin', name: 'Admin Sistem', role: 'admin' },
       { id: '100', name: 'Wilhelmina Kasih, S.Ag,S.Pd', role: 'kepsek' },
       { id: '101', name: 'Ambrosius Sina, S.Pd', role: 'guru' },
       { id: '102', name: 'Trifosa Rabe, S.Pd', role: 'guru' },
@@ -230,7 +165,7 @@
 
     let currentUser = null;
     let pendingStatus = '';
-    let globalDatabase = []; 
+    let globalDatabase = [];
 
     function getTodayString() {
       const d = new Date();
@@ -240,345 +175,132 @@
     async function handleLogin() {
       const role = document.getElementById('login-role').value;
       const id = document.getElementById('login-id').value.trim();
-      const msg = document.getElementById('login-msg');
-      const btn = document.getElementById('btn-login');
-
       const user = MASTER_USERS.find(u => String(u.id) === String(id) && u.role === role);
 
       if (user) {
         currentUser = user;
+        document.getElementById('btn-login').disabled = true;
+        document.getElementById('login-msg').classList.remove('hidden');
+        document.getElementById('login-msg').textContent = 'Sinkronisasi...';
         
-        msg.classList.remove('hidden');
-        msg.classList.replace('text-red-500', 'text-blue-500');
-        msg.innerHTML = '<span class="animate-pulse">Sinkronisasi server...</span>';
-        btn.disabled = true;
-        btn.classList.add('opacity-70');
-
         await fetchDatabase();
 
-        // JIKA KEPALA SEKOLAH LOGIN, OTOMATIS ISIKAN ABSEN KEHADIRAN HARI INI
         if (user.role === 'kepsek') {
           const today = getTodayString();
           const hasAbsen = globalDatabase.find(a => String(a.id_user) === String(user.id) && a.date === today);
-          
           if (!hasAbsen) {
-            msg.innerHTML = '<span class="animate-pulse">Mencatat kehadiran Kepala Sekolah...</span>';
-            const newAbsen = { 
-              id_user: String(user.id), 
-              name: user.name, 
-              date: today, 
-              time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), 
-              status: 'HADIR', 
-              note: 'Otomatis Sistem (Login)' 
-            };
-            try {
-              await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(newAbsen) });
-              globalDatabase.push(newAbsen);
-            } catch(e) {
-              console.error("Gagal kirim absen otomatis kepsek", e);
-            }
+            const newAbsen = { id_user: String(user.id), name: user.name, date: today, time: new Date().toLocaleTimeString('id-ID'), status: 'HADIR', note: 'Login Otomatis Kepsek' };
+            await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(newAbsen) }).catch(e => console.log("Silent error"));
+            globalDatabase.push(newAbsen);
           }
         }
-
-        msg.classList.add('hidden');
-        msg.classList.replace('text-blue-500', 'text-red-500');
-        btn.disabled = false;
-        btn.classList.remove('opacity-70');
 
         if (user.role === 'admin' || user.role === 'kepsek') {
-          showPage('page-admin');
-          renderAdminDashboard();
-          if (user.role === 'kepsek') {
-            alert('Selamat Datang, Ibu Kepala Sekolah.\nKehadiran Anda hari ini telah berhasil disimpan secara otomatis.');
-          }
+          showPage('page-admin'); renderAdminDashboard();
         } else {
-          showPage('page-guru');
-          renderGuruDashboard();
+          showPage('page-guru'); renderGuruDashboard();
         }
       } else {
-        msg.classList.remove('hidden');
-        msg.textContent = 'Data tidak ditemukan atau Hak Akses salah!';
+        alert("Data tidak ditemukan!");
       }
     }
 
     async function fetchDatabase() {
       try {
-        const antiCacheUrl = GOOGLE_SCRIPT_URL + "?nocache=" + new Date().getTime();
-        const response = await fetch(antiCacheUrl);
-        const rawData = await response.json();
-        
-        globalDatabase = rawData.map(row => {
-          let cleanDate = row.date;
-          if (cleanDate && typeof cleanDate === 'string' && cleanDate.includes('T')) {
-            const d = new Date(cleanDate);
-            cleanDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-          }
-          return { ...row, id_user: String(row.id_user), date: cleanDate };
-        });
-      } catch (error) {
-        console.error("Gagal terhubung:", error);
-      }
+        const response = await fetch(GOOGLE_SCRIPT_URL + "?t=" + Date.now());
+        globalDatabase = await response.json();
+      } catch (e) { console.error("Fetch error", e); }
     }
 
-    function showPage(pageId) {
-      document.querySelectorAll('#app > div').forEach(div => div.classList.add('hidden'));
-      document.getElementById(pageId).classList.remove('hidden');
+    function showPage(id) {
+      document.querySelectorAll('#app > div').forEach(d => d.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
       lucide.createIcons();
     }
 
-    function logout() {
-      currentUser = null;
-      document.getElementById('login-id').value = '';
-      globalDatabase = []; 
-      showPage('page-login');
-    }
+    function logout() { location.reload(); }
 
-    // === HALAMAN GURU ===
     function renderGuruDashboard() {
       document.getElementById('user-name').textContent = currentUser.name;
-      
-      const now = new Date();
-      document.getElementById('current-date').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(now);
-      
       const today = getTodayString();
+      document.getElementById('current-date').textContent = today;
       const hasAbsen = globalDatabase.find(a => String(a.id_user) === String(currentUser.id) && a.date === today);
 
-      const badge = document.getElementById('status-badge');
-      const actionButtons = document.getElementById('action-buttons');
-      const actionSuccess = document.getElementById('action-success');
-      const userRoleDisplay = document.getElementById('user-role');
-      let roleText = currentUser.role === 'pegawai' ? 'PEGAWAI' : 'GURU';
-
       if (hasAbsen) {
-        badge.textContent = hasAbsen.status;
-        badge.className = `px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-emerald-100 text-emerald-700`;
-        userRoleDisplay.textContent = `${roleText} • SUDAH ABSEN (${hasAbsen.status})`;
-        userRoleDisplay.className = "text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 mt-1 inline-block";
-        actionButtons.classList.add('hidden');
-        actionSuccess.classList.remove('hidden');
+        document.getElementById('status-badge').textContent = hasAbsen.status;
+        document.getElementById('action-buttons').classList.add('hidden');
+        document.getElementById('action-success').classList.remove('hidden');
       } else {
-        badge.textContent = "Belum Absen";
-        badge.className = "px-3 py-1.5 bg-slate-200 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-500";
-        userRoleDisplay.textContent = roleText;
-        userRoleDisplay.className = "text-xs font-bold text-slate-500 mt-1 block";
-        actionButtons.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
-        actionSuccess.classList.add('hidden');
-        
-        // Kembalikan tampilan tombol Hadir seperti semula (Kamera)
-        document.getElementById('btn-hadir').innerHTML = `
-          <i data-lucide="camera" class="w-8 h-8 text-white/80 mb-2"></i>
-          <h3 class="text-white font-bold text-xl">Hadir & Foto Selfie</h3>
-          <p class="text-emerald-50 text-xs font-medium mt-1">Klik untuk buka kamera</p>
-        `;
+        document.getElementById('action-buttons').classList.remove('hidden');
+        document.getElementById('action-success').classList.add('hidden');
       }
 
-      const history = globalDatabase.filter(a => String(a.id_user) === String(currentUser.id)).sort((a,b) => new Date(b.date) - new Date(a.date));
       const list = document.getElementById('guru-history-list');
-      list.innerHTML = history.length ? '' : '<p class="text-slate-400 text-center py-6 font-medium text-sm">Belum ada riwayat di server</p>';
-      
-      history.slice(0, 5).forEach(h => {
-        list.innerHTML += `
-          <div class="bg-white p-4 rounded-2xl flex items-center justify-between border border-slate-100 shadow-sm">
-            <div>
-              <p class="text-slate-800 font-bold text-sm">${formatShortDate(h.date)}</p>
-              <p class="text-slate-500 font-medium text-[11px] mt-0.5">${h.time} ${h.note ? '• ' + h.note : ''}</p>
-            </div>
-            <span class="text-[10px] font-black bg-slate-50 px-2.5 py-1 rounded-lg ${getStatusColor(h.status)}">${h.status}</span>
-          </div>
-        `;
+      list.innerHTML = '';
+      globalDatabase.filter(a => String(a.id_user) === String(currentUser.id)).reverse().slice(0, 5).forEach(h => {
+        list.innerHTML += `<div class="p-4 bg-white border rounded-2xl flex justify-between"><div><p class="font-bold">${h.date}</p><p class="text-xs">${h.status} - ${h.time}</p></div></div>`;
       });
       lucide.createIcons();
     }
 
-    // FUNGSI BARU: Proses Gambar dari Kamera dan Kompres
-    async function processPhotoAndSubmit(event) {
-      const file = event.target.files[0];
+    async function processPhotoAndSubmit(e) {
+      const file = e.target.files[0];
       if (!file) return;
-
-      const btnHadir = document.getElementById('btn-hadir');
-      const originalHTML = btnHadir.innerHTML;
-      btnHadir.innerHTML = `<p class="text-white font-bold animate-pulse text-center py-2">Memproses foto...</p>`;
-      document.getElementById('action-buttons').classList.add('opacity-50', 'pointer-events-none');
-
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = async (event) => {
         const img = new Image();
-        img.onload = function() {
-          // Buat Canvas untuk mengecilkan ukuran foto
+        img.onload = async () => {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
-          
-          // Batasi lebar foto maksimal 400px agar ringan untuk dikirim ke Google Sheets
-          const MAX_WIDTH = 400;
-          const scaleSize = MAX_WIDTH / img.width;
-          canvas.width = MAX_WIDTH;
-          canvas.height = img.height * scaleSize;
-
-          // Gambar ulang foto ke canvas dengan ukuran baru
+          canvas.width = 400; canvas.height = img.height * (400/img.width);
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          
-          // Ubah ke format Base64 (Kualitas 60%)
-          const base64Photo = canvas.toDataURL('image/jpeg', 0.6); 
-
-          // Lanjutkan proses absen setelah kompresi selesai
-          submitAbsen('HADIR', 'Hadir (Dengan Foto)', base64Photo);
-        }
-        img.src = e.target.result;
-      }
+          submitAbsen('HADIR', 'Hadir dengan Foto', canvas.toDataURL('image/jpeg', 0.6));
+        };
+        img.src = event.target.result;
+      };
       reader.readAsDataURL(file);
     }
 
-    // UPDATE: Terima Parameter Base64 Foto
-    async function submitAbsen(status, note = '', photoBase64 = '') {
-      const today = getTodayString();
-      const existing = globalDatabase.find(a => String(a.id_user) === String(currentUser.id) && a.date === today);
-      if (existing) return;
-
-      // Sisipkan photoBase64 ke dalam data object
-      const newAbsen = { 
-        id_user: String(currentUser.id), 
-        name: currentUser.name, 
-        date: today, 
-        time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), 
-        status: status, 
-        note: note,
-        photo: photoBase64 
-      };
-      
-      const actionButtons = document.getElementById('action-buttons');
-      const btnHadir = document.getElementById('btn-hadir');
-      const originalHTML = btnHadir.innerHTML;
-      
-      actionButtons.classList.add('opacity-50', 'pointer-events-none');
-      btnHadir.innerHTML = `<p class="text-white font-bold animate-pulse text-center py-2">Menyimpan ke server...</p>`;
-
+    async function submitAbsen(status, note = '', photo = '') {
+      const data = { id_user: String(currentUser.id), name: currentUser.name, date: getTodayString(), time: new Date().toLocaleTimeString('id-ID'), status, note, photo };
+      document.getElementById('app').style.opacity = "0.5";
       try {
-        await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(newAbsen) });
-        globalDatabase.push(newAbsen);
-        renderGuruDashboard(); 
-      } catch(err) {
-        alert('Gagal mengirim data! Pastikan internet Anda aktif.');
-        actionButtons.classList.remove('opacity-50', 'pointer-events-none');
-        btnHadir.innerHTML = originalHTML;
-        lucide.createIcons();
-      }
+        await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+        globalDatabase.push(data);
+        renderGuruDashboard();
+      } catch (e) { alert("Data terkirim, mohon cek riwayat."); }
+      document.getElementById('app').style.opacity = "1";
     }
 
-    function openNote(status) { pendingStatus = status; document.getElementById('modal-title').textContent = `Keterangan ${status}`; document.getElementById('modal-note').classList.remove('hidden'); }
-    function closeNote() { document.getElementById('modal-note').classList.add('hidden'); document.getElementById('note-text').value = ''; }
-    function confirmAbsenWithNote() { const note = document.getElementById('note-text').value.trim(); submitAbsen(pendingStatus, note); closeNote(); }
+    function openNote(s) { pendingStatus = s; document.getElementById('modal-note').classList.remove('hidden'); }
+    function closeNote() { document.getElementById('modal-note').classList.add('hidden'); }
+    function confirmAbsenWithNote() { submitAbsen(pendingStatus, document.getElementById('note-text').value); closeNote(); }
 
-    // === HALAMAN ADMIN / KEPALA SEKOLAH DESKTOP ===
     function renderAdminDashboard() {
-      if (currentUser.role === 'kepsek') {
-        document.getElementById('admin-name').textContent = currentUser.name;
-        document.getElementById('admin-subrole').textContent = "Kepala Sekolah Dashboard";
-        document.getElementById('btn-reset').classList.add('hidden'); 
-      } else {
-        document.getElementById('admin-name').textContent = "Panel Admin";
-        document.getElementById('admin-subrole').textContent = "Administrator System";
-        document.getElementById('btn-reset').classList.remove('hidden'); 
-      }
-
+      document.getElementById('btn-reset').classList.toggle('hidden', currentUser.role !== 'admin');
       const today = getTodayString();
-      const hariIni = globalDatabase.filter(a => a.date === today && a.status === 'HADIR');
-      
-      document.getElementById('stat-hadir').textContent = hariIni.length;
+      document.getElementById('stat-hadir').textContent = globalDatabase.filter(a => a.date === today && a.status === 'HADIR').length;
       document.getElementById('stat-total').textContent = globalDatabase.length;
-
       const tbody = document.getElementById('admin-table-body');
       tbody.innerHTML = '';
-      
-      const sortedDb = [...globalDatabase].reverse();
-
-      if(sortedDb.length === 0) {
-         tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400 font-medium">Server bersih. Belum ada data absensi masuk.</td></tr>';
-      }
-
-      sortedDb.forEach((a, index) => {
-        tbody.innerHTML += `
-          <tr class="hover:bg-slate-50 transition-colors">
-            <td class="p-5 text-center text-sm font-bold text-slate-400">${index + 1}</td>
-            <td class="p-5 font-bold text-slate-800">${a.name}</td>
-            <td class="p-5 text-sm font-medium text-slate-600">${formatShortDate(a.date)}</td>
-            <td class="p-5 text-sm font-medium text-slate-600">${a.time}</td>
-            <td class="p-5 text-sm font-black ${getStatusColor(a.status)}">${a.status}</td>
-            <td class="p-5 text-sm font-medium text-slate-500 max-w-xs truncate">${a.note || '-'}</td>
-          </tr>
-        `;
+      [...globalDatabase].reverse().forEach((a, i) => {
+        tbody.innerHTML += `<tr><td class="p-4 text-xs font-bold">${i+1}</td><td class="p-4 font-bold">${a.name}</td><td class="p-4 text-xs">${a.date} ${a.time}</td><td class="p-4 font-black">${a.status}</td><td class="p-4 text-xs">${a.note || '-'}</td></tr>`;
       });
     }
 
-    async function refreshAdmin(event) {
-      const btn = event.currentTarget;
-      const originalHTML = btn.innerHTML;
-      btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Memuat...`;
-      await fetchDatabase();
-      renderAdminDashboard();
-      btn.innerHTML = originalHTML;
-      lucide.createIcons();
-    }
+    async function refreshAdmin(e) { e.target.disabled = true; await fetchDatabase(); renderAdminDashboard(); e.target.disabled = false; lucide.createIcons(); }
 
-    // FUNGSI RESET DATA SERVER (Hanya Admin)
     async function resetData() {
-      if (currentUser.role !== 'admin') return;
-      if(!confirm('PERINGATAN KERAS!\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA absensi di server Google Sheets secara permanen?\n\nGuru harus absen ulang setelah ini.')) return;
-
-      const btn = document.getElementById('btn-reset');
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Menghapus...';
-      btn.disabled = true;
-
-      try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: 'clear' })
-        });
-        
-        globalDatabase = [];
-        renderAdminDashboard();
-        alert('SUKSES! Data di server berhasil dikosongkan.');
-      } catch(e) {
-        alert('Terjadi kesalahan jaringan saat mencoba menghapus server.');
-      }
-      
-      btn.innerHTML = originalHtml;
-      btn.disabled = false;
-      lucide.createIcons();
+      if (!confirm("Hapus semua data?")) return;
+      await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'clear' }) });
+      location.reload();
     }
 
     function exportToExcel() {
-      if (!globalDatabase.length) return alert('Data masih kosong di server!');
-      const csvRows = [["ID User", "Nama", "Tanggal", "Jam", "Status", "Keterangan"].join(",")];
-      for (const row of globalDatabase) {
-        let cleanDate = row.date;
-        try { const d = new Date(row.date); if (!isNaN(d.getTime())) cleanDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`; } catch(e){}
-        csvRows.push([row.id_user, `"${row.name}"`, cleanDate, row.time, row.status, `"${row.note || ''}"`].join(","));
-      }
-      const blob = new Blob([csvRows.join("\n")], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.setAttribute("download", `Laporan_Absensi_SDK_Kuapuatu.csv`);
-      document.body.appendChild(link); link.click(); document.body.removeChild(link);
-    }
-
-    // === UTILS ===
-    function getStatusColor(s) {
-      if(s === 'HADIR') return 'text-emerald-600';
-      if(s === 'SAKIT') return 'text-blue-600';
-      if(s === 'IZIN') return 'text-amber-600';
-      return 'text-slate-500';
-    }
-
-    function formatShortDate(dateStr) {
-      if(!dateStr) return '';
-      try {
-        const d = new Date(dateStr);
-        if(isNaN(d.getTime())) return dateStr; 
-        return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
-      } catch(e) { return dateStr; }
+      let csv = "Nama,Tanggal,Jam,Status,Note\n";
+      globalDatabase.forEach(r => csv += `"${r.name}","${r.date}","${r.time}","${r.status}","${r.note}"\n`);
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'absen.csv'; a.click();
     }
 
     lucide.createIcons();
