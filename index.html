@@ -77,11 +77,14 @@
           </div>
 
           <div id="action-buttons" class="grid grid-cols-1 gap-3 hidden">
-            <button id="btn-hadir" onclick="submitAbsen('HADIR')" class="group relative overflow-hidden p-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-[2rem] text-left transition-all active:scale-95 shadow-xl shadow-emerald-500/20">
-              <i data-lucide="check-circle" class="w-8 h-8 text-white/80 mb-2"></i>
-              <h3 class="text-white font-bold text-xl">Hadir Sekarang</h3>
-              <p class="text-emerald-50 text-xs font-medium mt-1">Klik untuk konfirmasi kehadiran</p>
+            <button id="btn-hadir" onclick="document.getElementById('camera-input').click()" class="group relative overflow-hidden p-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-[2rem] text-left transition-all active:scale-95 shadow-xl shadow-emerald-500/20">
+              <i data-lucide="camera" class="w-8 h-8 text-white/80 mb-2"></i>
+              <h3 class="text-white font-bold text-xl">Hadir & Foto Selfie</h3>
+              <p class="text-emerald-50 text-xs font-medium mt-1">Klik untuk buka kamera</p>
             </button>
+            
+            <input type="file" id="camera-input" accept="image/*" capture="user" class="hidden" onchange="processPhotoAndSubmit(event)">
+
             <div class="grid grid-cols-2 gap-3">
               <button onclick="openNote('IZIN')" class="p-4 bg-white rounded-[1.5rem] text-left border border-slate-200 shadow-sm hover:border-amber-300 transition-colors">
                 <i data-lucide="mail" class="w-6 h-6 text-amber-500 mb-2"></i>
@@ -360,10 +363,12 @@
         userRoleDisplay.className = "text-xs font-bold text-slate-500 mt-1 block";
         actionButtons.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
         actionSuccess.classList.add('hidden');
+        
+        // Kembalikan tampilan tombol Hadir seperti semula (Kamera)
         document.getElementById('btn-hadir').innerHTML = `
-          <i data-lucide="check-circle" class="w-8 h-8 text-white/80 mb-2"></i>
-          <h3 class="text-white font-bold text-xl">Hadir Sekarang</h3>
-          <p class="text-emerald-50 text-xs font-medium mt-1">Klik untuk konfirmasi kehadiran</p>
+          <i data-lucide="camera" class="w-8 h-8 text-white/80 mb-2"></i>
+          <h3 class="text-white font-bold text-xl">Hadir & Foto Selfie</h3>
+          <p class="text-emerald-50 text-xs font-medium mt-1">Klik untuk buka kamera</p>
         `;
       }
 
@@ -385,12 +390,61 @@
       lucide.createIcons();
     }
 
-    async function submitAbsen(status, note = '') {
+    // FUNGSI BARU: Proses Gambar dari Kamera dan Kompres
+    async function processPhotoAndSubmit(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const btnHadir = document.getElementById('btn-hadir');
+      const originalHTML = btnHadir.innerHTML;
+      btnHadir.innerHTML = `<p class="text-white font-bold animate-pulse text-center py-2">Memproses foto...</p>`;
+      document.getElementById('action-buttons').classList.add('opacity-50', 'pointer-events-none');
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          // Buat Canvas untuk mengecilkan ukuran foto
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Batasi lebar foto maksimal 400px agar ringan untuk dikirim ke Google Sheets
+          const MAX_WIDTH = 400;
+          const scaleSize = MAX_WIDTH / img.width;
+          canvas.width = MAX_WIDTH;
+          canvas.height = img.height * scaleSize;
+
+          // Gambar ulang foto ke canvas dengan ukuran baru
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          
+          // Ubah ke format Base64 (Kualitas 60%)
+          const base64Photo = canvas.toDataURL('image/jpeg', 0.6); 
+
+          // Lanjutkan proses absen setelah kompresi selesai
+          submitAbsen('HADIR', 'Hadir (Dengan Foto)', base64Photo);
+        }
+        img.src = e.target.result;
+      }
+      reader.readAsDataURL(file);
+    }
+
+    // UPDATE: Terima Parameter Base64 Foto
+    async function submitAbsen(status, note = '', photoBase64 = '') {
       const today = getTodayString();
       const existing = globalDatabase.find(a => String(a.id_user) === String(currentUser.id) && a.date === today);
       if (existing) return;
 
-      const newAbsen = { id_user: String(currentUser.id), name: currentUser.name, date: today, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), status: status, note: note };
+      // Sisipkan photoBase64 ke dalam data object
+      const newAbsen = { 
+        id_user: String(currentUser.id), 
+        name: currentUser.name, 
+        date: today, 
+        time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), 
+        status: status, 
+        note: note,
+        photo: photoBase64 
+      };
+      
       const actionButtons = document.getElementById('action-buttons');
       const btnHadir = document.getElementById('btn-hadir');
       const originalHTML = btnHadir.innerHTML;
