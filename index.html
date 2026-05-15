@@ -12,53 +12,74 @@
     body { background-color: #f8fafc; }
     .fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-    .loader { border: 3px solid #f3f3f3; border-top: 3px solid #10b981; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+    .loader { border: 3px solid #f3f3f3; border-top: 3px solid #10b981; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     @media print { .no-print { display: none !important; } .show-on-print { display: block !important; } }
     .show-on-print { display: none; }
-    .img-preview-admin { width: 60px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; margin-top: 4px; }
+    .img-preview-admin { width: 60px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; }
   </style>
 </head>
-<body class="text-slate-800 min-h-screen">
+<body class="text-slate-800 min-h-screen flex flex-col">
 
-  <div id="app" class="w-full relative">
+  <div id="app" class="flex-1 w-full relative">
     
     <div id="page-login" class="hidden min-h-screen flex items-center justify-center p-4 fade-in">
-      <div class="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-2xl text-center">
+      <div class="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-2xl border border-slate-100 text-center">
+        <div class="w-20 h-20 bg-emerald-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+          <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
+        </div>
         <h1 class="text-3xl font-extrabold text-slate-900">SDK St. Yoseph</h1>
-        <div class="space-y-5 mt-8 text-left">
-          <select id="login-role" class="w-full px-5 py-4 bg-slate-50 border rounded-2xl outline-none"><option value="guru">Guru / Pegawai</option><option value="kepsek">Kepala Sekolah</option><option value="admin">Administrator</option></select>
+        <p class="text-slate-500 mt-2 mb-8 uppercase tracking-widest text-xs font-bold">Sistem Absensi Foto</p>
+        <div class="space-y-5 text-left">
+          <select id="login-role" class="w-full px-5 py-4 bg-slate-50 border rounded-2xl outline-none font-medium text-slate-700 border-slate-200">
+            <option value="guru">Guru / Pegawai</option>
+            <option value="kepsek">Kepala Sekolah</option>
+            <option value="admin">Administrator</option>
+          </select>
           <input id="login-id" type="text" placeholder="Masukkan NIP / Username" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none">
-          <button onclick="handleLogin()" class="w-full py-4 bg-emerald-500 text-white font-bold rounded-2xl shadow-lg">MASUK SISTEM</button>
+          <button onclick="handleLogin()" class="w-full py-4 bg-emerald-500 text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all">MASUK SISTEM</button>
         </div>
       </div>
     </div>
 
     <div id="page-guru" class="hidden min-h-screen py-6 px-4 fade-in">
-      <div class="max-w-md mx-auto bg-white min-h-[85vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden">
+      <div class="max-w-md mx-auto bg-white min-h-[85vh] rounded-[2.5rem] shadow-2xl border border-slate-100 flex flex-col overflow-hidden">
         <header class="p-6 flex items-center justify-between border-b bg-white sticky top-0 z-10">
-          <h2 id="user-name" class="font-bold text-slate-900 uppercase">Memuat...</h2>
-          <button onclick="logout()" class="p-3 rounded-2xl bg-red-50 text-red-500"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100"><i data-lucide="user" class="w-6 h-6 text-emerald-600"></i></div>
+            <div>
+                <h2 id="user-name" class="font-bold text-slate-900 leading-tight truncate w-32 uppercase">Memuat...</h2>
+                <p id="user-role-label" class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">GURU / PEGAWAI</p>
+            </div>
+          </div>
+          <button onclick="logout()" class="p-3 rounded-2xl bg-red-50 text-red-500 active:scale-90"><i data-lucide="log-out" class="w-5 h-5"></i></button>
         </header>
+        
         <main class="flex-1 px-6 pt-6 pb-24 space-y-6">
           <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-[2rem] text-white shadow-xl">
             <p id="current-date" class="font-bold text-emerald-400 text-sm">...</p>
+            <h3 class="text-xl font-extrabold mt-1">Halo, Selamat Bekerja!</h3>
             <div class="mt-4 flex gap-2">
               <span id="status-masuk-pill" class="px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold border border-white/10 uppercase">Masuk: -</span>
               <span id="status-pulang-pill" class="px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold border border-white/10 uppercase">Pulang: -</span>
             </div>
           </div>
+
           <div class="grid grid-cols-1 gap-4">
-            <button id="btn-absen-masuk" onclick="triggerUpload('MASUK')" class="p-6 bg-white border-2 border-slate-100 rounded-[2rem] flex justify-between items-center">
-                <span id="txt-masuk" class="font-bold">Absen Masuk</span><i data-lucide="log-in" class="text-emerald-500"></i>
+            <button id="btn-absen-masuk" onclick="triggerUpload('MASUK')" class="p-6 bg-white border-2 border-slate-100 rounded-[2rem] text-left flex justify-between items-center hover:border-emerald-500 transition-all active:scale-95">
+              <div><h3 id="txt-masuk" class="font-bold text-slate-900 text-lg">Absen Masuk</h3><p id="label-masuk" class="text-xs text-slate-500 font-medium">Klik untuk upload foto</p></div>
+              <div id="icon-masuk" class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center"><i data-lucide="log-in"></i></div>
             </button>
-            <button id="btn-absen-pulang" onclick="triggerUpload('PULANG')" class="p-6 bg-white border-2 border-slate-100 rounded-[2rem] flex justify-between items-center">
-                <span id="txt-pulang" class="font-bold">Absen Pulang</span><i data-lucide="log-out" class="text-orange-500"></i>
+            <button id="btn-absen-pulang" onclick="triggerUpload('PULANG')" class="p-6 bg-white border-2 border-slate-100 rounded-[2rem] text-left flex justify-between items-center hover:border-orange-500 transition-all active:scale-95">
+              <div><h3 id="txt-pulang" class="font-bold text-slate-900 text-lg">Absen Pulang</h3><p id="label-pulang" class="text-xs text-slate-500 font-medium">Klik untuk upload foto</p></div>
+              <div id="icon-pulang" class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center"><i data-lucide="log-out"></i></div>
             </button>
           </div>
+
           <input type="file" id="universal-upload" accept="image/*" class="hidden" onchange="processUpload(event)">
+
           <div class="space-y-4 pt-4 border-t border-slate-100">
-            <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="clock" class="w-5 h-5 text-emerald-500"></i> Riwayat Hari Ini</h3>
+            <h3 class="font-bold text-slate-800 flex items-center gap-2 text-lg"><i data-lucide="clock-3" class="w-5 h-5 text-emerald-500"></i> Riwayat Hari Ini</h3>
             <div id="today-log" class="space-y-3"></div>
           </div>
         </main>
@@ -67,21 +88,29 @@
 
     <div id="page-admin" class="hidden min-h-screen py-8 px-4 fade-in">
         <div class="max-w-6xl mx-auto">
-            <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm no-print">
-              <h2 class="text-2xl font-extrabold text-slate-900">Panel Administrator</h2>
-              <button onclick="logout()" class="px-5 py-2 bg-red-50 text-red-600 rounded-lg font-bold">Keluar</button>
+            <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 no-print">
+              <div><h2 class="text-2xl font-extrabold text-slate-900">Panel Administrator</h2><p class="text-slate-500 text-sm font-medium">Rekapitulasi Absensi</p></div>
+              <button onclick="logout()" class="px-5 py-2 bg-red-50 text-red-600 rounded-lg font-bold flex items-center gap-2"><i data-lucide="log-out" class="w-4 h-4"></i> Keluar</button>
             </header>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 no-print">
-                <select id="admin-filter-guru" onchange="renderAdminDetail()" class="p-4 bg-white border rounded-2xl outline-none"><option value="">Semua Guru</option></select>
+                <select id="admin-filter-guru" onchange="renderAdminDetail()" class="p-4 bg-white border rounded-2xl outline-none"><option value="">-- Semua Guru --</option></select>
                 <select id="admin-filter-bulan" onchange="renderAdminDetail()" class="p-4 bg-white border rounded-2xl outline-none">
                     <option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option><option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option><option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
                 </select>
             </div>
-            <div class="flex justify-end mb-4 no-print"><button onclick="window.print()" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg">Cetak Laporan</button></div>
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-50"><tr><th class="p-4">No</th><th class="p-4">Nama</th><th class="p-4">Tanggal</th><th class="p-4 text-center">Masuk</th><th class="p-4 text-center">Pulang</th></tr></thead>
-                    <tbody id="table-detail-body"></tbody>
+            <div class="flex justify-end mb-4 no-print"><button onclick="window.print()" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg flex items-center gap-2"><i data-lucide="printer" class="w-5 h-5"></i> Cetak Laporan</button></div>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 text-slate-600 border-b">
+                        <tr class="text-[11px] font-bold uppercase tracking-wider">
+                            <th class="p-4 text-center border-r w-12">No</th>
+                            <th class="p-4 border-r">Nama Lengkap</th>
+                            <th class="p-4 text-center border-r">Tanggal</th>
+                            <th class="p-4 text-center border-r">Masuk</th>
+                            <th class="p-4 text-center">Pulang</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-detail-body" class="divide-y text-sm"></tbody>
                 </table>
             </div>
         </div>
@@ -89,9 +118,10 @@
 
     <div id="modal-success" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
         <div class="bg-white w-full max-w-xs p-8 rounded-[2.5rem] shadow-2xl text-center fade-in">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4"><i data-lucide="badge-check" class="w-10 h-10"></i></div>
             <h3 class="text-2xl font-black text-slate-900">Berhasil!</h3>
-            <p class="text-slate-500 mt-2 text-sm">Data absensi Anda telah disimpan.</p>
-            <button onclick="closeModal()" class="w-full mt-6 py-4 bg-emerald-500 text-white font-bold rounded-2xl">OK</button>
+            <p class="text-slate-500 mt-2 text-sm leading-relaxed">Data absensi Anda telah disimpan.</p>
+            <button onclick="closeModal()" class="w-full mt-6 py-4 bg-emerald-500 text-white font-bold rounded-2xl hover:bg-emerald-600">OK</button>
         </div>
     </div>
 
@@ -107,8 +137,14 @@
         const savedUser = localStorage.getItem('absen_user_session');
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
-            if (currentUser.role === 'admin') { showPage('page-admin'); await renderAdminDetail(); } 
-            else { showPage('page-guru'); await refreshGuruData(); }
+            await fetchDatabase();
+            if (currentUser.role === 'admin') { 
+                showPage('page-admin'); 
+                renderAdminDetail(); 
+            } else { 
+                showPage('page-guru'); 
+                renderGuruDashboard(); 
+            }
         } else { showPage('page-login'); }
         lucide.createIcons();
     };
@@ -117,30 +153,53 @@
         try { const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + Date.now()); globalDatabase = await res.json(); } catch (e) { console.error(e); }
     }
 
-    async function refreshGuruData() {
+    function renderGuruDashboard() {
         document.getElementById('user-name').textContent = currentUser.name;
+        document.getElementById('user-role-label').textContent = currentUser.role.toUpperCase();
         document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' });
-        await fetchDatabase();
+        
         const today = new Date().toISOString().split('T')[0];
         const myLogs = globalDatabase.filter(a => String(a.id_user) === String(currentUser.id) && String(a.date) === today);
-        renderGuruDashboard(myLogs);
-    }
+        
+        // Identifikasi data masuk & pulang dari riwayat
+        const dataMasuk = myLogs.find(l => l.status === 'MASUK' || l.status === 'MASUK & PULANG');
+        const dataPulang = myLogs.find(l => l.status === 'PULANG' || l.status === 'MASUK & PULANG');
 
-    function renderGuruDashboard(myLogs) {
-        updateButtonVisual('masuk', myLogs.find(l => l.status.includes('MASUK')));
-        updateButtonVisual('pulang', myLogs.find(l => l.status.includes('PULANG')));
+        updateButtonVisual('masuk', dataMasuk);
+        updateButtonVisual('pulang', dataPulang);
+        
         const logContainer = document.getElementById('today-log');
-        logContainer.innerHTML = myLogs.length ? myLogs.map(l => `<div class="p-4 bg-slate-50 rounded-2xl flex justify-between items-center border border-slate-100"><div><p class="font-bold">Absen ${l.status}</p><p class="text-xs text-slate-400">${l.time}</p></div><i data-lucide="check-circle" class="text-emerald-500"></i></div>`).join('') : '<p class="text-center text-slate-400 italic text-sm py-4">Belum ada absen hari ini.</p>';
+        logContainer.innerHTML = myLogs.length ? myLogs.map(l => `
+          <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
+            <div class="w-10 h-10 rounded-xl ${l.status.includes('MASUK') ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'} flex items-center justify-center font-black text-xs">${l.status[0]}</div>
+            <div class="flex-1"><p class="font-bold text-slate-800 text-sm">Absen ${l.status}</p><p class="text-[10px] text-slate-400 font-black uppercase">${l.time} WITA</p></div>
+            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
+          </div>
+        `).join('') : '<p class="text-center text-slate-400 italic text-sm py-4">Belum ada absen hari ini.</p>';
         lucide.createIcons();
     }
 
     function updateButtonVisual(type, data) {
         const btn = document.getElementById(`btn-absen-${type}`);
+        const txt = document.getElementById(`txt-${type}`);
         const pill = document.getElementById(`status-${type}-pill`);
+        const icon = document.getElementById(`icon-${type}`);
+
         if (data) {
-            btn.disabled = true; btn.classList.add('opacity-70', 'bg-slate-100');
-            document.getElementById(`txt-${type}`).textContent = `Selesai (${data.time})`;
-            pill.textContent = `${type.toUpperCase()}: ${data.time}`;
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'bg-slate-50', 'border-emerald-200');
+            icon.innerHTML = '<i data-lucide="check-circle-2" class="text-emerald-500 w-6 h-6"></i>';
+            
+            if (type === 'masuk') {
+                const jamMasuk = data.time.split(' - ')[0];
+                txt.textContent = `Sudah Absen (${jamMasuk})`;
+                pill.textContent = `MASUK: ${jamMasuk}`;
+            } else {
+                // Untuk Pulang, tampilkan range di tombol, tapi jam akhir saja di pill profil
+                txt.textContent = `Sudah Absen (${data.time})`;
+                const jamPulangSaja = data.time.includes(' - ') ? data.time.split(' - ')[1] : data.time;
+                pill.textContent = `PULANG: ${jamPulangSaja}`;
+            }
         }
     }
 
@@ -149,45 +208,70 @@
     async function processUpload(event) {
         const file = event.target.files[0]; if (!file) return;
         const btn = document.getElementById(`btn-absen-${currentMode.toLowerCase()}`);
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<span class="loader"></span> Mengirim...';
+        const oldContent = btn.innerHTML;
+        btn.innerHTML = '<div><div class="loader mr-2"></div><span class="font-bold">Mengirim...</span></div>';
         btn.disabled = true;
 
         const reader = new FileReader();
         reader.onload = async function(e) {
-            const payload = { id_user: String(currentUser.id), name: currentUser.name, date: new Date().toISOString().split('T')[0], time: new Date().toLocaleTimeString('id-ID', { hour12:false, hour:'2-digit', minute:'2-digit' }), status: currentMode, photo: e.target.result };
+            const payload = { 
+                id_user: String(currentUser.id), 
+                name: currentUser.name, 
+                date: new Date().toISOString().split('T')[0], 
+                time: new Date().toLocaleTimeString('id-ID', { hour12:false, hour:'2-digit', minute:'2-digit' }), 
+                status: currentMode, 
+                photo: e.target.result 
+            };
             try {
                 await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
                 document.getElementById('modal-success').classList.remove('hidden');
-            } catch (err) { alert("Gagal!"); btn.innerHTML = originalText; btn.disabled = false; }
+            } catch (err) {
+                alert("Gagal mengirim.");
+                btn.innerHTML = oldContent;
+                btn.disabled = false;
+            }
         };
         reader.readAsDataURL(file);
     }
 
     function closeModal() {
         document.getElementById('modal-success').classList.add('hidden');
-        location.reload();
+        location.reload(); // Reload untuk mereset semua state dan refresh data
     }
 
-    async function renderAdminDetail() {
-        const selGuru = document.getElementById('admin-filter-guru');
-        if (selGuru.options.length <= 1) MASTER_USERS.filter(u => u.role !== 'admin').forEach(u => { const opt = document.createElement('option'); opt.value = u.id; opt.textContent = u.name; selGuru.appendChild(opt); });
-        
-        await fetchDatabase();
+    function renderAdminDetail() {
+        const selGuruId = document.getElementById('admin-filter-guru').value;
         const selBulan = document.getElementById('admin-filter-bulan').value;
-        const selGuruId = selGuru.value;
         const prefix = `${new Date().getFullYear()}-${selBulan}`;
         
-        let filtered = globalDatabase.filter(d => d.date.startsWith(prefix));
+        // Populate Guru Filter once
+        const selGuru = document.getElementById('admin-filter-guru');
+        if (selGuru.options.length <= 1) {
+            MASTER_USERS.filter(u => u.role !== 'admin').forEach(u => {
+                const opt = document.createElement('option'); opt.value = u.id; opt.textContent = u.name; selGuru.appendChild(opt);
+            });
+        }
+
+        let filtered = globalDatabase.filter(d => String(d.date).startsWith(prefix));
         if(selGuruId) filtered = filtered.filter(d => String(d.id_user) === String(selGuruId));
 
-        document.getElementById('table-detail-body').innerHTML = filtered.map((r, i) => `<tr><td class="p-4">${i+1}</td><td class="p-4 font-bold">${r.name}</td><td class="p-4">${r.date}</td><td class="p-4 text-center">${r.time.includes('-') ? r.time.split(' - ')[0] : (r.status.includes('MASUK') ? r.time : '-')}</td><td class="p-4 text-center">${r.time.includes('-') ? r.time.split(' - ')[1] : (r.status.includes('PULANG') ? r.time : '-')}</td></tr>`).join('');
+        document.getElementById('table-detail-body').innerHTML = filtered.map((r, i) => `
+            <tr>
+                <td class="p-4 text-center border-r">${i+1}</td>
+                <td class="p-4 font-bold border-r">${r.name}</td>
+                <td class="p-4 text-center border-r">${r.date}</td>
+                <td class="p-4 text-center border-r font-bold text-emerald-600">${r.time.split(' - ')[0]}</td>
+                <td class="p-4 text-center font-bold text-orange-600">${r.time.includes(' - ') ? r.time.split(' - ')[1] : (r.status === 'PULANG' ? r.time : '-')}</td>
+            </tr>
+        `).join('');
+        lucide.createIcons();
     }
 
     function handleLogin() {
         const id = document.getElementById('login-id').value.trim(), role = document.getElementById('login-role').value;
         const user = MASTER_USERS.find(u => String(u.id) === id && u.role === role);
-        if (user) { localStorage.setItem('absen_user_session', JSON.stringify(user)); location.reload(); } else alert("Gagal!");
+        if (user) { localStorage.setItem('absen_user_session', JSON.stringify(user)); location.reload(); }
+        else alert("ID atau Peran salah!");
     }
     function logout() { localStorage.removeItem('absen_user_session'); location.reload(); }
     function showPage(id) { document.querySelectorAll('#app > div').forEach(d => d.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); lucide.createIcons(); }
