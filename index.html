@@ -13,34 +13,9 @@
     .fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     
-    /* STYLE UNTUK PRINT */
-    @media print {
-      .no-print { display: none !important; }
-      .show-on-print { display: block !important; }
-      body { background-color: white !important; padding: 0 !important; }
-      .max-w-6xl { max-width: 100% !important; width: 100% !important; margin: 0 !important; }
-      
-      table { width: 100% !important; border: 1px solid #000 !important; border-collapse: collapse !important; }
-      th { background-color: #f1f1f1 !important; color: black !important; border: 1px solid #000 !important; padding: 10px !important; -webkit-print-color-adjust: exact; }
-      td { border: 1px solid #000 !important; padding: 8px !important; color: black !important; vertical-align: middle !important; }
-      
-      .img-absen { width: 80px !important; height: auto !important; border: 1px solid #000 !important; }
-      tr { page-break-inside: avoid; }
-    }
-
-    .show-on-print { display: none; }
-
-    /* Tampilan Tabel di Layar */
-    .img-preview-admin {
-      width: 60px;
-      height: 80px;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
-      margin-top: 4px;
-      transition: transform 0.2s;
-    }
-    .img-preview-admin:hover { transform: scale(2); z-index: 50; position: relative; }
+    /* Loader Spinner */
+    .loader { border: 3px solid #f3f3f3; border-top: 3px solid #10b981; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col">
@@ -48,15 +23,15 @@
   <div id="app" class="flex-1 w-full relative">
     
     <div id="page-login" class="hidden min-h-screen flex items-center justify-center p-4 fade-in">
-      <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-2xl border border-slate-100 text-center">
+      <div class="w-full max-w-md bg-white p-8 rounded-[2.5rem] shadow-2xl border border-slate-100 text-center">
         <div class="w-20 h-20 bg-emerald-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
           <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
         </div>
-        <h1 class="text-3xl font-extrabold text-slate-900">SDK St. Yoseph</h1>
+        <h1 class="text-3xl font-extrabold text-slate-900">SDK St.Yoseph Kuaputu</h1>
         <p class="text-slate-500 mt-2 mb-8 uppercase tracking-widest text-xs font-bold">Sistem Absensi Foto</p>
         <div class="space-y-5 text-left">
           <select id="login-role" class="w-full px-5 py-4 bg-slate-50 border rounded-2xl outline-none font-medium text-slate-700 border-slate-200">
-            <option value="guru">Guru / Pegawai</option>
+            <option value="guru">Guru</option>
             <option value="kepsek">Kepala Sekolah</option>
             <option value="admin">Administrator</option>
           </select>
@@ -73,11 +48,12 @@
             <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100"><i data-lucide="user" class="w-6 h-6 text-emerald-600"></i></div>
             <div>
                 <h2 id="user-name" class="font-bold text-slate-900 leading-tight truncate w-32 uppercase">Memuat...</h2>
-                <p id="user-role-label" class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">GURU / PEGAWAI</p>
+                <p id="user-role-label" class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">GURU</p>
             </div>
           </div>
           <button onclick="logout()" class="p-3 rounded-2xl bg-red-50 text-red-500 active:scale-90"><i data-lucide="log-out" class="w-5 h-5"></i></button>
         </header>
+        
         <main class="flex-1 px-6 pt-6 pb-24 space-y-6">
           <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-[2rem] text-white shadow-xl">
             <p id="current-date" class="font-bold text-emerald-400 text-sm">...</p>
@@ -87,89 +63,44 @@
               <span id="status-pulang-pill" class="px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold border border-white/10 uppercase">Pulang: -</span>
             </div>
           </div>
+
           <div class="grid grid-cols-1 gap-4">
             <button id="btn-absen-masuk" onclick="triggerUpload('MASUK')" class="p-6 bg-white border-2 border-slate-100 rounded-[2rem] text-left flex justify-between items-center hover:border-emerald-500 transition-all active:scale-95">
-              <div><h3 class="font-bold text-slate-900 text-lg">Absen Masuk</h3><p id="label-masuk" class="text-xs text-slate-500 font-medium">Klik untuk upload foto</p></div>
+              <div><h3 class="font-bold text-slate-900 text-lg">Absen Masuk</h3><p id="label-masuk" class="text-xs text-slate-500 font-medium">Upload foto absen masuk</p></div>
               <div id="icon-masuk" class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center"><i data-lucide="log-in"></i></div>
             </button>
             <button id="btn-absen-pulang" onclick="triggerUpload('PULANG')" class="p-6 bg-white border-2 border-slate-100 rounded-[2rem] text-left flex justify-between items-center hover:border-orange-500 transition-all active:scale-95">
-              <div><h3 class="font-bold text-slate-900 text-lg">Absen Pulang</h3><p id="label-pulang" class="text-xs text-slate-500 font-medium">Klik untuk upload foto</p></div>
+              <div><h3 class="font-bold text-slate-900 text-lg">Absen Pulang</h3><p id="label-pulang" class="text-xs text-slate-500 font-medium">Upload foto absen pulang</p></div>
               <div id="icon-pulang" class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center"><i data-lucide="log-out"></i></div>
             </button>
           </div>
-          <input type="file" id="universal-upload" accept="image/*" capture="camera" class="hidden" onchange="processUpload(event)">
+
+          <input type="file" id="universal-upload" accept="image/*" class="hidden" onchange="processUpload(event)">
+
           <div class="space-y-4 pt-4 border-t border-slate-100">
             <h3 class="font-bold text-slate-800 flex items-center gap-2 text-lg"><i data-lucide="clock-3" class="w-5 h-5 text-emerald-500"></i> Riwayat Hari Ini</h3>
-            <div id="today-log" class="space-y-3"></div>
+            <div id="today-log" class="space-y-3">
+                <p class="text-center text-slate-400 italic text-sm py-4">Memperbarui riwayat...</p>
+            </div>
           </div>
         </main>
       </div>
     </div>
 
-    <div id="page-admin" class="hidden min-h-screen py-8 px-4 fade-in">
-        <div class="max-w-6xl mx-auto">
-            
-            <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 no-print">
-              <div>
-                <h2 class="text-2xl font-extrabold text-slate-900">Panel Administrator</h2>
-                <p class="text-slate-500 text-sm font-medium">Rekapitulasi Absensi SDK St. Yoseph</p>
-              </div>
-              <button onclick="logout()" class="px-5 py-2 bg-red-50 text-red-600 rounded-lg font-bold flex items-center gap-2 hover:bg-red-100 transition-all">
-                <i data-lucide="log-out" class="w-4 h-4"></i> Keluar
-              </button>
-            </header>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 no-print">
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Filter Nama Guru</label>
-                    <select id="admin-filter-guru" onchange="renderAdminDetail()" class="w-full px-3 py-2 bg-slate-50 border rounded-lg font-semibold text-slate-700 outline-none focus:border-emerald-500">
-                        <option value="">-- Semua Guru --</option>
-                    </select>
-                </div>
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Filter Bulan</label>
-                    <select id="admin-filter-bulan" onchange="renderAdminDetail()" class="w-full px-3 py-2 bg-slate-50 border rounded-lg font-semibold text-slate-700 outline-none">
-                        <option value="01">Januari</option><option value="02">Februari</option><option value="03">Maret</option><option value="04">April</option><option value="05">Mei</option><option value="06">Juni</option><option value="07">Juli</option><option value="08">Agustus</option><option value="09">September</option><option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
-                    </select>
-                </div>
+    <div id="modal-success" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-xs p-8 rounded-[2.5rem] shadow-2xl text-center fade-in">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="badge-check" class="w-10 h-10"></i>
             </div>
-
-            <div class="mb-6 flex justify-between items-center no-print">
-                <button id="btn-reset" onclick="resetDatabase()" class="px-4 py-2 bg-slate-100 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-dashed border-slate-300 hover:border-red-200">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i> Reset Database
-                </button>
-                <button onclick="window.print()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg flex items-center gap-2 active:scale-95 transition-all">
-                    <i data-lucide="printer" class="w-5 h-5"></i> Cetak Laporan (PDF)
-                </button>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="hidden show-on-print p-8 text-center border-b-2 border-black">
-                    <h1 class="text-2xl font-bold uppercase">Laporan Kehadiran Guru & Pegawai</h1>
-                    <h2 class="text-xl font-bold uppercase">SDK St. Yoseph Kuaputu</h2>
-                    <p id="print-date-info" class="mt-2 font-medium"></p>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
-                            <tr class="text-[11px] font-bold uppercase tracking-wider">
-                                <th class="p-4 text-center border-r border-slate-100 w-12">No</th>
-                                <th class="p-4 border-r border-slate-100">Nama Lengkap</th>
-                                <th class="p-4 text-center border-r border-slate-100">Tanggal</th>
-                                <th class="p-4 text-center border-r border-slate-100">Masuk</th>
-                                <th class="p-4 text-center">Pulang</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-detail-body" class="divide-y divide-slate-200 bg-white text-sm"></tbody>
-                    </table>
-                </div>
-                <div id="admin-empty" class="p-20 text-center hidden">
-                    <p class="text-slate-400 italic font-bold">Data tidak ditemukan.</p>
-                </div>
-            </div>
+            <h3 class="text-2xl font-black text-slate-900">Berhasil!</h3>
+            <p class="text-slate-500 mt-2 text-sm leading-relaxed">Data absensi Anda telah berhasil disimpan ke server.</p>
+            <button onclick="closeModal()" class="w-full mt-6 py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all">TUTUP</button>
         </div>
     </div>
+
+    <div id="page-admin" class="hidden min-h-screen py-8 px-4 fade-in">
+        </div>
+
   </div>
 
   <script>
@@ -194,116 +125,47 @@
     let globalDatabase = [];
     let currentMode = '';
 
-    function getDirectImgUrl(url) {
-        if (!url) return '';
-        if (url.includes('drive.google.com')) {
-            let fileId = '';
-            if (url.includes('id=')) fileId = url.split('id=')[1].split('&')[0];
-            else if (url.includes('/d/')) fileId = url.split('/d/')[1].split('/')[0];
-            return fileId ? `https://docs.google.com/uc?export=view&id=${fileId}` : url;
-        }
-        return url;
-    }
-
     window.onload = async function() {
-      const selGuru = document.getElementById('admin-filter-guru');
-      MASTER_USERS.filter(u => u.role !== 'admin').forEach(u => {
-          const opt = document.createElement('option'); opt.value = u.id; opt.textContent = u.name; selGuru.appendChild(opt);
-      });
-      
-      document.getElementById('admin-filter-bulan').value = String(new Date().getMonth() + 1).padStart(2, '0');
-      
       const savedUser = localStorage.getItem('absen_user_session');
       if (savedUser) {
         currentUser = JSON.parse(savedUser);
-        await fetchDatabase();
-        if (currentUser.role === 'admin') { showPage('page-admin'); renderAdminDetail(); } 
-        else { showPage('page-guru'); renderGuruDashboard(); }
+        if (currentUser.role === 'admin') {
+            showPage('page-admin');
+        } else {
+            showPage('page-guru');
+            await refreshGuruData();
+        }
       } else { showPage('page-login'); }
       lucide.createIcons();
     };
 
     async function fetchDatabase() {
-      try { const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + Date.now()); globalDatabase = await res.json(); } catch (e) { console.error(e); }
+      try { 
+        const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + Date.now()); 
+        globalDatabase = await res.json(); 
+      } catch (e) { console.error("Gagal memuat database:", e); }
     }
 
-    function renderAdminDetail() {
-      const selGuruId = document.getElementById('admin-filter-guru').value;
-      const selBulan = document.getElementById('admin-filter-bulan').value;
-      const prefix = `${new Date().getFullYear()}-${selBulan}`;
-      
-      const namaBulan = document.getElementById('admin-filter-bulan').options[document.getElementById('admin-filter-bulan').selectedIndex].text;
-      document.getElementById('print-date-info').textContent = `Periode: ${namaBulan} ${new Date().getFullYear()}`;
-
-      let filtered = globalDatabase.filter(d => String(d.date).startsWith(prefix));
-      if(selGuruId) filtered = filtered.filter(d => String(d.id_user) === String(selGuruId));
-
-      let grouped = {};
-      filtered.forEach(d => {
-          const key = d.id_user + "_" + d.date;
-          if(!grouped[key]) grouped[key] = { name: d.name, date: d.date, masuk_time: '-', pulang_time: '-', foto_masuk: '', foto_pulang: '' };
-          if(d.status === 'MASUK') { grouped[key].masuk_time = d.time; grouped[key].foto_masuk = d.foto_masuk || d.photo; }
-          if(d.status === 'PULANG') { grouped[key].pulang_time = d.time; grouped[key].foto_pulang = d.foto_pulang || d.photo; }
-      });
-
-      const tbody = document.getElementById('table-detail-body');
-      const rows = Object.values(grouped).sort((a,b) => b.date.localeCompare(a.date));
-      document.getElementById('admin-empty').classList.toggle('hidden', rows.length > 0);
-      
-      tbody.innerHTML = rows.map((r, i) => `
-        <tr class="hover:bg-slate-50 transition-all">
-            <td class="p-3 text-center border-r border-slate-100 font-medium text-slate-500">${i+1}</td>
-            <td class="p-3 font-bold text-slate-800 border-r border-slate-100">${r.name}</td>
-            <td class="p-3 text-center border-r border-slate-100 text-slate-600">${r.date}</td>
-            <td class="p-3 text-center border-r border-slate-100">
-                <div class="flex flex-col items-center">
-                    <span class="font-bold text-emerald-600">${r.masuk_time}</span>
-                    ${r.foto_masuk ? `<img src="${getDirectImgUrl(r.foto_masuk)}" class="img-preview-admin img-absen">` : '<span class="text-[10px] text-slate-300 italic">No Photo</span>'}
-                </div>
-            </td>
-            <td class="p-3 text-center">
-                <div class="flex flex-col items-center">
-                    <span class="font-bold text-orange-600">${r.pulang_time}</span>
-                    ${r.foto_pulang ? `<img src="${getDirectImgUrl(r.foto_pulang)}" class="img-preview-admin img-absen">` : '<span class="text-[10px] text-slate-300 italic">No Photo</span>'}
-                </div>
-            </td>
-        </tr>
-      `).join('');
-      lucide.createIcons();
-    }
-
-    function handleLogin() {
-      const id = document.getElementById('login-id').value.trim();
-      const role = document.getElementById('login-role').value;
-      const user = MASTER_USERS.find(u => String(u.id) === id && u.role === role);
-      if (user) { localStorage.setItem('absen_user_session', JSON.stringify(user)); location.reload(); }
-      else alert("Login Gagal! Periksa NIP/ID dan Peran.");
-    }
-
-    function logout() { localStorage.removeItem('absen_user_session'); location.reload(); }
-
-    function showPage(id) { 
-      document.querySelectorAll('#app > div').forEach(d => d.classList.add('hidden')); 
-      document.getElementById(id).classList.remove('hidden'); 
-      lucide.createIcons();
-    }
-
-    function renderGuruDashboard() {
+    async function refreshGuruData() {
       document.getElementById('user-name').textContent = currentUser.name;
-      document.getElementById('user-role-label').textContent = currentUser.role.toUpperCase();
       document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' });
       
+      await fetchDatabase();
       const today = new Date().toISOString().split('T')[0];
       const myLogs = globalDatabase.filter(a => String(a.id_user) === String(currentUser.id) && String(a.date).includes(today));
       
-      updateButtonVisual('masuk', myLogs.find(l => l.status === 'MASUK'));
-      updateButtonVisual('pulang', myLogs.find(l => l.status === 'PULANG'));
+      renderGuruDashboard(myLogs);
+    }
+
+    function renderGuruDashboard(myLogs) {
+      updateButtonVisual('masuk', myLogs.find(l => l.status.includes('MASUK')));
+      updateButtonVisual('pulang', myLogs.find(l => l.status.includes('PULANG')));
       
       const logContainer = document.getElementById('today-log');
       if (myLogs.length > 0) {
         logContainer.innerHTML = myLogs.map(l => `
           <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
-            <div class="w-10 h-10 rounded-xl ${l.status === 'MASUK' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'} flex items-center justify-center font-black text-xs">${l.status[0]}</div>
+            <div class="w-10 h-10 rounded-xl ${l.status.includes('MASUK') ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'} flex items-center justify-center font-black text-xs">${l.status[0]}</div>
             <div class="flex-1">
               <p class="font-bold text-slate-800 text-sm">Absen ${l.status}</p>
               <p class="text-[10px] text-slate-400 font-black uppercase">${l.time} WITA</p>
@@ -333,10 +195,20 @@
       }
     }
 
-    function triggerUpload(mode) { currentMode = mode; document.getElementById('universal-upload').click(); }
+    function triggerUpload(mode) { 
+      currentMode = mode; 
+      document.getElementById('universal-upload').click(); 
+    }
 
     async function processUpload(event) {
-      const file = event.target.files[0]; if (!file) return;
+      const file = event.target.files[0]; 
+      if (!file) return;
+
+      const btn = document.getElementById(`btn-absen-${currentMode.toLowerCase()}`);
+      const oldHTML = btn.innerHTML;
+      btn.innerHTML = `<div class="flex items-center gap-3"><div><div class="loader"></div></div><div><h3 class="font-bold text-slate-900 text-lg">Mengirim...</h3></div></div>`;
+      btn.disabled = true;
+
       const reader = new FileReader();
       reader.onload = async function(e) {
         const payload = { 
@@ -347,37 +219,47 @@
           status: currentMode, 
           photo: e.target.result 
         };
-        
-        // Visual Feedback
-        const btn = document.getElementById(`btn-absen-${currentMode.toLowerCase()}`);
-        btn.innerHTML = "Sedang mengirim...";
-        btn.disabled = true;
 
         try {
+          // Menggunakan fetch ke script google
           await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-          location.reload();
+          
+          // Munculkan Pop-up Berhasil
+          document.getElementById('modal-success').classList.remove('hidden');
+          
         } catch (err) {
-          alert("Gagal mengirim absen. Coba lagi.");
-          location.reload();
+          alert("Gagal mengirim absen. Silakan coba lagi.");
+          btn.innerHTML = oldHTML;
+          btn.disabled = false;
         }
       };
       reader.readAsDataURL(file);
     }
 
-    async function resetDatabase() {
-      if(confirm("PERINGATAN: Hapus seluruh data absensi di Spreadsheet secara permanen?")) {
-        const btn = document.getElementById('btn-reset');
-        btn.innerHTML = "Menghapus...";
-        btn.disabled = true;
-        try {
-          await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action:'clear'}) });
-          alert("Data berhasil dikosongkan.");
-          location.reload();
-        } catch (e) {
-          alert("Gagal menghapus data.");
-          location.reload();
-        }
-      }
+    function closeModal() {
+        document.getElementById('modal-success').classList.add('hidden');
+        // Refresh data profil tanpa reload halaman
+        refreshGuruData();
+        // Reset input file agar bisa pilih file yang sama jika perlu
+        document.getElementById('universal-upload').value = "";
+    }
+
+    function handleLogin() {
+      const id = document.getElementById('login-id').value.trim();
+      const role = document.getElementById('login-role').value;
+      const user = MASTER_USERS.find(u => String(u.id) === id && u.role === role);
+      if (user) { 
+        localStorage.setItem('absen_user_session', JSON.stringify(user)); 
+        location.reload(); 
+      } else alert("Login Gagal! Periksa NIP/ID dan Peran.");
+    }
+
+    function logout() { localStorage.removeItem('absen_user_session'); location.reload(); }
+
+    function showPage(id) { 
+      document.querySelectorAll('#app > div').forEach(d => d.classList.add('hidden')); 
+      document.getElementById(id).classList.remove('hidden'); 
+      lucide.createIcons();
     }
   </script>
 </body>
