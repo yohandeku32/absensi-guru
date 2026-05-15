@@ -14,27 +14,28 @@
     .fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     
-    /* Global Loader - Pasti di Tengah */
+    /* Global Loader - Pasti di Tengah & Minimalist */
     #global-loader { 
       position: fixed; 
       inset: 0; 
-      background: #ffffff; 
+      background: rgba(255, 255, 255, 0.9); 
+      backdrop-filter: blur(5px);
       z-index: 9999; 
       display: flex; 
       flex-direction: column; 
       align-items: center;    /* Tengah Horizontal */
       justify-content: center; /* Tengah Vertikal */
-      gap: 1.5rem; 
+      gap: 1rem; 
       transition: opacity 0.3s ease; 
     }
 
     .loader-spin { 
-      border: 5px solid #f3f3f3; 
-      border-top: 5px solid #10b981; 
+      border: 3px solid #f1f5f9; 
+      border-top: 3px solid #10b981; 
       border-radius: 50%; 
-      width: 50px; 
-      height: 50px; 
-      animation: spin 1s linear infinite; 
+      width: 36px; 
+      height: 36px; 
+      animation: spin 0.8s linear infinite; 
     }
 
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -49,6 +50,10 @@
       display: inline-block; 
     }
 
+    /* Progress Bar Upload */
+    .progress-wrapper { width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; display: none; margin-bottom: 0.5rem; }
+    .progress-bar { height: 100%; background: #10b981; width: 0%; transition: width 0.4s ease; }
+
     @media print { .no-print { display: none !important; } }
   </style>
 </head>
@@ -56,10 +61,7 @@
 
   <div id="global-loader">
     <div class="loader-spin"></div>
-    <div class="text-center px-6">
-      <h2 class="text-slate-900 font-extrabold text-xl mb-1">SDK St.Yoseph Kuaputu</h2>
-      <p id="loader-text" class="text-emerald-500 font-bold animate-pulse text-xs uppercase tracking-[0.2em]">Menyiapkan Data...</p>
-    </div>
+    <p id="loader-text" class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">Menyiapkan Data...</p>
   </div>
 
   <div id="app" class="flex-1 w-full relative">
@@ -107,6 +109,10 @@
           </div>
 
           <div class="grid grid-cols-1 gap-4">
+            <div id="upload-progress-container" class="progress-wrapper">
+                <div id="upload-progress-bar" class="progress-bar"></div>
+            </div>
+
             <button id="btn-absen-masuk" onclick="triggerUpload('MASUK')" class="p-6 bg-white border-2 border-slate-100 rounded-[2rem] text-left flex justify-between items-center hover:border-emerald-500 transition-all active:scale-95">
               <div><h3 id="txt-masuk" class="font-bold text-slate-900 text-lg">Absen Masuk</h3><p id="label-masuk" class="text-xs text-slate-500 font-medium">Klik untuk upload foto</p></div>
               <div id="icon-masuk" class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center"><i data-lucide="log-in"></i></div>
@@ -284,6 +290,13 @@
     async function processUpload(event) {
         const file = event.target.files[0]; if (!file) return;
         
+        const progressContainer = document.getElementById('upload-progress-container');
+        const progressBar = document.getElementById('upload-progress-bar');
+        
+        // Tampilkan progress bar dan set awal 10%
+        progressContainer.style.display = 'block';
+        setTimeout(() => progressBar.style.width = '10%', 50);
+
         const btn = document.getElementById(`btn-absen-${currentMode.toLowerCase()}`);
         const originalHTML = btn.innerHTML;
         btn.disabled = true;
@@ -291,6 +304,8 @@
 
         const reader = new FileReader();
         reader.onload = async function(e) {
+            progressBar.style.width = '40%'; // Membaca file selesai
+
             const payload = { 
                 id_user: String(currentUser.id), 
                 name: currentUser.name, 
@@ -299,13 +314,24 @@
                 status: currentMode, 
                 photo: e.target.result 
             };
+            
+            progressBar.style.width = '70%'; // Memulai pengiriman
+
             try {
                 await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                document.getElementById('modal-success').classList.remove('hidden');
+                progressBar.style.width = '100%'; // Selesai
+                
+                setTimeout(() => {
+                    document.getElementById('modal-success').classList.remove('hidden');
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }, 400); // Beri jeda sedikit agar user melihat progress 100%
             } catch (err) {
                 alert("Gagal mengirim.");
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
             }
         };
         reader.readAsDataURL(file);
