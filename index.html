@@ -12,7 +12,6 @@
     body { background-color: #f8fafc; }
     .fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-    
     #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; pointer-events: none; }
     .toast { animation: slideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; pointer-events: auto; }
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -55,7 +54,10 @@
         <header class="p-6 flex items-center justify-between border-b border-slate-50 bg-white sticky top-0 z-10">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100"><i data-lucide="user" class="w-6 h-6 text-emerald-600"></i></div>
-            <div><h2 id="user-name" class="font-bold text-slate-900 leading-tight truncate w-32">-</h2><p id="user-role-label" class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">GURU</p></div>
+            <div>
+                <h2 id="user-name" class="font-bold text-slate-900 leading-tight truncate w-32">Loading...</h2>
+                <p id="user-role-label" class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">GURU</p>
+            </div>
           </div>
           <button onclick="logout()" class="p-3 rounded-2xl bg-red-50 text-red-500 active:scale-90 transition-transform"><i data-lucide="log-out" class="w-5 h-5"></i></button>
         </header>
@@ -73,7 +75,7 @@
           <div class="grid grid-cols-1 gap-4">
             <button id="btn-absen-masuk" onclick="triggerUpload('MASUK')" class="group p-6 bg-white border-2 border-slate-100 rounded-[2rem] transition-all hover:border-emerald-500 active:scale-95 text-left">
               <div class="flex justify-between items-center" id="container-masuk">
-                <div>
+                <div id="text-masuk">
                   <h3 class="font-bold text-slate-900 text-lg">Absen Masuk</h3>
                   <p id="label-masuk" class="text-xs text-slate-500 font-medium">Klik untuk upload foto</p>
                 </div>
@@ -85,7 +87,7 @@
 
             <button id="btn-absen-pulang" onclick="triggerUpload('PULANG')" class="group p-6 bg-white border-2 border-slate-100 rounded-[2rem] transition-all hover:border-orange-500 active:scale-95 text-left">
               <div class="flex justify-between items-center" id="container-pulang">
-                <div>
+                <div id="text-pulang">
                   <h3 class="font-bold text-slate-900 text-lg">Absen Pulang</h3>
                   <p id="label-pulang" class="text-xs text-slate-500 font-medium">Klik untuk upload foto</p>
                 </div>
@@ -107,53 +109,7 @@
     </div>
 
     <div id="page-admin" class="hidden min-h-screen py-8 px-4 fade-in">
-        <div class="max-w-7xl mx-auto space-y-6">
-            <header class="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 rounded-[2.5rem] shadow-xl border">
-              <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-full bg-slate-900 flex items-center justify-center shadow-lg"><i data-lucide="layout-dashboard" class="w-7 h-7 text-white"></i></div>
-                <div><h2 class="text-xl font-black text-slate-900 leading-tight">Admin Console</h2><p class="text-sm font-bold text-emerald-600">SDK St. Yoseph Kuaputu</p></div>
-              </div>
-              <button onclick="logout()" class="px-6 py-3 rounded-2xl bg-red-50 text-red-600 font-bold flex items-center gap-2 transition-all hover:bg-red-100">Keluar</button>
-            </header>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <div class="bg-white p-6 rounded-[2rem] shadow-lg border h-fit">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Statistik Hari Ini</p>
-                    <div class="space-y-4">
-                        <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center">
-                            <p class="text-[10px] font-bold text-emerald-600 uppercase">Masuk</p>
-                            <p id="stat-masuk" class="text-3xl font-black text-emerald-800">0</p>
-                        </div>
-                        <div class="bg-orange-50 p-4 rounded-2xl border border-orange-100 text-center">
-                            <p class="text-[10px] font-bold text-orange-600 uppercase">Pulang</p>
-                            <p id="stat-pulang" class="text-3xl font-black text-orange-800">0</p>
-                        </div>
-                        <button onclick="exportToExcel()" class="w-full py-3 bg-slate-900 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-slate-800"><i data-lucide="file-down" class="w-4 h-4"></i> Export CSV</button>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-3 bg-white p-6 rounded-[2.5rem] shadow-xl border min-h-[500px]">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-black text-slate-900 text-xl">Database Absensi</h3>
-                        <button onclick="refreshAdmin(event)" id="btn-refresh" class="p-2 bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-100"><i data-lucide="refresh-cw" class="w-5 h-5"></i></button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead>
-                                <tr class="text-[10px] font-black text-slate-400 uppercase border-b border-slate-50">
-                                    <th class="pb-4 pr-4">Nama</th>
-                                    <th class="pb-4 pr-4">Waktu</th>
-                                    <th class="pb-4 pr-4">Status</th>
-                                    <th class="pb-4 pr-4">Foto</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-table-body" class="divide-y divide-slate-50"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
         </div>
-    </div>
   </div>
 
   <script>
@@ -198,7 +154,8 @@
     async function fetchDatabase() {
       try {
         const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + Date.now());
-        globalDatabase = await res.json();
+        const data = await res.json();
+        globalDatabase = Array.isArray(data) ? data : [];
         return true;
       } catch (e) {
         console.error("Fetch error:", e);
@@ -207,17 +164,17 @@
     }
 
     async function handleLogin() {
-      const id = document.getElementById('login-id').value.trim();
-      const role = document.getElementById('login-role').value;
-      const user = MASTER_USERS.find(u => String(u.id) === String(id) && u.role === role);
+      const idInput = document.getElementById('login-id').value.trim();
+      const roleInput = document.getElementById('login-role').value;
+      const user = MASTER_USERS.find(u => String(u.id) === idInput && u.role === roleInput);
 
       if (!user) {
-        showToast('Gagal Masuk', 'NIP atau Role tidak sesuai.', 'error');
+        showToast('Gagal Masuk', 'ID User atau Peran tidak ditemukan.', 'error');
         return;
       }
 
       const btn = document.getElementById('btn-login');
-      btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Sinkronisasi...`;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Memuat Data...`;
       btn.disabled = true;
       lucide.createIcons();
 
@@ -229,7 +186,7 @@
       } else {
         showPage('page-guru'); renderGuruDashboard();
       }
-      showToast('Berhasil', `Selamat datang, ${user.name}`);
+      showToast('Login Berhasil', `Halo, ${user.name}`);
     }
 
     function showPage(id) {
@@ -239,18 +196,24 @@
     }
 
     function renderGuruDashboard() {
+      if (!currentUser) return;
+      
+      // Update Profil agar tidak "false"
       document.getElementById('user-name').textContent = currentUser.name;
       document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' });
       
       const today = getTodayString();
+      // Pastikan filter ID menggunakan tipe data yang sama (String)
       const myLogs = globalDatabase.filter(a => String(a.id_user) === String(currentUser.id) && a.date === today);
       
       const hasMasuk = myLogs.find(l => l.status === 'MASUK');
       const hasPulang = myLogs.find(l => l.status === 'PULANG');
 
-      updateButtonStatus('masuk', hasMasuk);
-      updateButtonStatus('pulang', hasPulang);
+      // Update Visual Tombol & Pill
+      updateButtonVisual('masuk', hasMasuk);
+      updateButtonVisual('pulang', hasPulang);
 
+      // Render List Riwayat
       const logContainer = document.getElementById('today-log');
       logContainer.innerHTML = myLogs.length ? myLogs.map(l => `
         <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 fade-in">
@@ -262,31 +225,37 @@
           <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
         </div>
       `).join('') : `<p class="text-center text-slate-300 text-sm italic py-4">Belum ada aktivitas hari ini</p>`;
+      
       lucide.createIcons();
     }
 
-    function updateButtonStatus(type, data) {
+    function updateButtonVisual(type, data) {
       const btn = document.getElementById(`btn-absen-${type}`);
       const label = document.getElementById(`label-${type}`);
       const icon = document.getElementById(`icon-${type}`);
       const pill = document.getElementById(`status-${type}-pill`);
 
       if (data) {
+        // Jika sudah absen
         btn.disabled = true;
-        btn.classList.replace('bg-white', 'bg-slate-50');
-        btn.classList.remove('hover:border-emerald-500', 'hover:border-orange-500');
-        label.innerHTML = `<span class="text-emerald-600 font-bold">Sudah Terkirim pukul ${data.time}</span>`;
+        btn.classList.remove('hover:border-emerald-500', 'hover:border-orange-500', 'bg-white');
+        btn.classList.add('bg-slate-50', 'border-slate-100', 'opacity-80');
+        label.innerHTML = `<span class="text-emerald-600 font-bold">Sudah Absen (${data.time})</span>`;
         icon.className = "w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg";
         icon.innerHTML = `<i data-lucide="check" class="w-6 h-6"></i>`;
-        pill.innerHTML = `${type.toUpperCase()}: ${data.time}`;
+        
+        pill.textContent = `${type.toUpperCase()}: ${data.time}`;
         pill.className = "px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-[10px] font-bold border border-emerald-500/20 uppercase";
       } else {
+        // Jika belum absen
         btn.disabled = false;
-        btn.classList.replace('bg-slate-50', 'bg-white');
+        btn.classList.add('bg-white');
+        btn.classList.remove('bg-slate-50', 'opacity-80');
         label.innerText = "Klik untuk upload foto";
         icon.className = `w-12 h-12 ${type === 'masuk' ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'} rounded-2xl flex items-center justify-center`;
         icon.innerHTML = `<i data-lucide="${type === 'masuk' ? 'log-in' : 'log-out'}" class="w-6 h-6"></i>`;
-        pill.innerHTML = `${type.toUpperCase()}: -`;
+        
+        pill.textContent = `${type.toUpperCase()}: -`;
         pill.className = "px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold border border-white/10 uppercase";
       }
       lucide.createIcons();
@@ -299,92 +268,52 @@
 
     async function processUpload(event) {
       const file = event.target.files[0];
-      if (!file) return;
+      if (!file || !currentUser) return;
 
       const container = document.getElementById(`container-${currentMode.toLowerCase()}`);
-      const originalHTML = container.innerHTML;
+      const oldContent = container.innerHTML;
       
-      // UI Loading
-      container.innerHTML = `<div class="flex items-center gap-4 w-full py-2"><i data-lucide="loader-2" class="w-8 h-8 animate-spin text-emerald-500"></i><p class="font-bold text-sm animate-pulse">Mengirim data...</p></div>`;
+      // Loading State
+      container.innerHTML = `<div class="flex items-center gap-4 py-2"><i data-lucide="loader-2" class="w-8 h-8 animate-spin text-emerald-500"></i><p class="font-bold text-sm text-emerald-600">Sedang mengirim...</p></div>`;
       lucide.createIcons();
 
       const reader = new FileReader();
       reader.onload = async function(e) {
-        // Langsung kirim tanpa watermark agar cepat
         const payload = {
           id_user: String(currentUser.id),
           name: currentUser.name,
           date: getTodayString(),
           time: new Date().toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit' }),
           status: currentMode,
-          photo: e.target.result // Base64 original
+          photo: e.target.result
         };
 
         try {
-          const res = await fetch(GOOGLE_SCRIPT_URL, { 
+          // Kirim data ke Google Sheets
+          await fetch(GOOGLE_SCRIPT_URL, { 
             method: 'POST', 
-            mode: 'no-cors', // Penting untuk Apps Script jika ada masalah CORS
+            mode: 'no-cors', 
             body: JSON.stringify(payload) 
           });
 
-          // Karena no-cors, kita anggap sukses jika tidak masuk ke catch
-          showToast('Sukses', `Absen ${currentMode} berhasil disimpan.`);
+          showToast('Sukses!', `Absen ${currentMode} berhasil terkirim.`);
           
-          // Refresh data
+          // Paksa reload database dan render ulang dashboard
           await fetchDatabase();
           renderGuruDashboard();
         } catch (err) {
-          showToast('Gagal', 'Terjadi kesalahan saat mengirim.', 'error');
-          container.innerHTML = originalHTML;
+          showToast('Error', 'Gagal mengirim data. Coba lagi.', 'error');
+          container.innerHTML = oldContent;
           lucide.createIcons();
         }
       };
       reader.readAsDataURL(file);
-      event.target.value = ''; // Reset input file
-    }
-
-    function renderAdminDashboard() {
-      const today = getTodayString();
-      document.getElementById('stat-masuk').textContent = globalDatabase.filter(a => a.date === today && a.status === 'MASUK').length;
-      document.getElementById('stat-pulang').textContent = globalDatabase.filter(a => a.date === today && a.status === 'PULANG').length;
-      
-      const tbody = document.getElementById('admin-table-body');
-      tbody.innerHTML = [...globalDatabase].reverse().slice(0, 50).map(a => `
-        <tr class="text-sm">
-          <td class="py-4 pr-4 font-bold text-slate-800">${a.name}</td>
-          <td class="py-4 pr-4 text-[10px] font-medium text-slate-500">${a.date}<br>${a.time}</td>
-          <td class="py-4 pr-4">
-            <span class="px-2 py-1 ${a.status === 'MASUK' ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'} rounded-lg text-[9px] font-black">${a.status}</span>
-          </td>
-          <td class="py-4 pr-4">
-            <a href="${a.photo_url}" target="_blank" class="p-2 bg-blue-50 text-blue-600 rounded-lg inline-block hover:bg-blue-100 transition-colors"><i data-lucide="image" class="w-4 h-4"></i></a>
-          </td>
-        </tr>
-      `).join('');
-      lucide.createIcons();
-    }
-
-    async function refreshAdmin(e) {
-      const icon = document.getElementById('btn-refresh');
-      icon.classList.add('animate-spin');
-      await fetchDatabase();
-      renderAdminDashboard();
-      setTimeout(() => icon.classList.remove('animate-spin'), 500);
-    }
-
-    function exportToExcel() {
-      if(globalDatabase.length === 0) return showToast('Peringatan', 'Database kosong', 'error');
-      let csv = "Nama,Tanggal,Jam,Status,Link Foto\n";
-      globalDatabase.forEach(r => csv += `"${r.name}","${r.date}","${r.time}","${r.status}","${r.photo_url}"\n`);
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `Laporan_Absensi_${getTodayString()}.csv`;
-      a.click();
+      event.target.value = ''; 
     }
 
     function logout() { location.reload(); }
-
+    
+    // Initial Icons
     lucide.createIcons();
   </script>
 </body>
