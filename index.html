@@ -12,23 +12,32 @@
     body { background-color: #f8fafc; }
     .fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Notification Toast Animation */
+    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; pointer-events: none; }
+    .toast { 
+      animation: slideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; 
+      pointer-events: auto;
+    }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
   </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col">
 
+  <div id="toast-container"></div>
+
   <div id="app" class="flex-1 w-full relative">
     
     <div id="page-login" class="min-h-screen flex items-center justify-center p-4 fade-in">
-      <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100">
-        <div class="text-center mb-10">
-          <div class="w-20 h-20 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/20 rotate-3">
-            <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
-          </div>
-          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">SDK St. Yoseph</h1>
-          <p class="text-slate-500 mt-2 font-medium">Sistem Informasi Absensi</p>
+      <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 text-center">
+        <div class="w-20 h-20 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl rotate-3">
+          <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
         </div>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">SDK St. Yoseph</h1>
+        <p class="text-slate-500 mt-2 font-medium mb-8">Sistem Informasi Absensi</p>
 
-        <div class="space-y-5">
+        <div class="space-y-5 text-left">
           <div>
             <label class="text-xs font-bold text-emerald-600 uppercase tracking-wider ml-1">Masuk Sebagai</label>
             <select id="login-role" class="w-full mt-1.5 px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-medium">
@@ -37,64 +46,66 @@
               <option value="admin">Administrator</option>
             </select>
           </div>
-          <input id="login-id" type="text" placeholder="Masukkan NIP / Username" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none transition-all placeholder:text-slate-400 font-medium shadow-sm">
-          <button id="btn-login" onclick="handleLogin()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-500/30 active:scale-[0.98] mt-4 flex justify-center items-center gap-2">
+          <input id="login-id" type="text" placeholder="Masukkan NIP / Username" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none transition-all placeholder:text-slate-400 font-medium">
+          <button id="btn-login" onclick="handleLogin()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/30 active:scale-[0.98] mt-4 flex justify-center items-center gap-2">
             Masuk Sekarang
           </button>
-          <p id="login-msg" class="text-center text-red-500 font-medium text-sm hidden">Data Salah</p>
         </div>
       </div>
     </div>
 
     <div id="page-guru" class="hidden min-h-screen py-6 px-4 fade-in">
-      <div class="max-w-md mx-auto bg-white min-h-[85vh] rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 flex flex-col overflow-hidden">
-        <header class="p-6 flex items-center justify-between border-b border-slate-100 bg-white sticky top-0 z-10">
+      <div class="max-w-md mx-auto bg-white min-h-[85vh] rounded-[2.5rem] shadow-2xl border border-slate-100 flex flex-col overflow-hidden">
+        <header class="p-6 flex items-center justify-between border-b border-slate-50 bg-white sticky top-0 z-10">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center border shadow-inner"><i data-lucide="user" class="w-6 h-6 text-emerald-600"></i></div>
-            <div><h2 id="user-name" class="font-bold text-slate-900 leading-tight">-</h2><p id="user-role" class="text-xs font-bold text-slate-500 uppercase tracking-widest">Guru / Pegawai</p></div>
+            <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100"><i data-lucide="user" class="w-6 h-6 text-emerald-600"></i></div>
+            <div><h2 id="user-name" class="font-bold text-slate-900 leading-tight truncate w-32">-</h2><p id="user-role" class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">GURU</p></div>
           </div>
           <button onclick="logout()" class="p-3 rounded-2xl bg-red-50 text-red-500 active:scale-90 transition-transform"><i data-lucide="log-out" class="w-5 h-5"></i></button>
         </header>
 
         <main class="flex-1 overflow-y-auto px-6 pt-6 pb-24 space-y-6">
-          <div class="bg-slate-50 p-5 rounded-[2rem] border border-slate-100">
-            <p id="current-date" class="text-emerald-700 font-extrabold text-lg">Memuat...</p>
-            <p class="text-slate-500 text-xs font-medium uppercase tracking-tighter">Status Absensi Anda</p>
+          <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-[2rem] text-white shadow-xl">
+            <p id="current-date" class="font-bold text-emerald-400 text-sm">Memuat...</p>
+            <h3 class="text-xl font-extrabold mt-1">Halo, Selamat Bekerja!</h3>
+            <div class="mt-4 flex gap-2">
+              <span id="status-masuk-pill" class="px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold border border-white/10 uppercase">Masuk: -</span>
+              <span id="status-pulang-pill" class="px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold border border-white/10 uppercase">Pulang: -</span>
+            </div>
           </div>
 
-          <div id="attendance-options" class="grid grid-cols-1 gap-4">
-            <div id="card-masuk" class="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm">
-              <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600"><i data-lucide="log-in" class="w-5 h-5"></i></div>
-                  <h3 class="font-bold text-slate-800">Absen Masuk</h3>
+          <div class="grid grid-cols-1 gap-4">
+            <button id="btn-absen-masuk" onclick="triggerUpload('MASUK')" class="group relative overflow-hidden p-6 bg-white border-2 border-slate-100 rounded-[2rem] transition-all hover:border-emerald-500 active:scale-95 text-left">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="font-bold text-slate-900 text-lg">Absen Masuk</h3>
+                  <p id="label-masuk" class="text-xs text-slate-500 font-medium">Klik untuk pilih foto galeri</p>
                 </div>
-                <span id="badge-masuk" class="text-[10px] font-bold px-3 py-1 bg-slate-100 text-slate-400 rounded-full uppercase">Belum</span>
+                <div id="icon-masuk" class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                  <i data-lucide="log-in" class="w-6 h-6"></i>
+                </div>
               </div>
-              <button id="btn-masuk" onclick="triggerUpload('MASUK')" class="w-full py-4 bg-emerald-500 text-white rounded-2xl font-bold shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
-                <i data-lucide="image" class="w-5 h-5"></i> Pilih Foto Masuk
-              </button>
-            </div>
+            </button>
 
-            <div id="card-pulang" class="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm">
-              <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600"><i data-lucide="log-out" class="w-5 h-5"></i></div>
-                  <h3 class="font-bold text-slate-800">Absen Pulang</h3>
+            <button id="btn-absen-pulang" onclick="triggerUpload('PULANG')" class="group relative overflow-hidden p-6 bg-white border-2 border-slate-100 rounded-[2rem] transition-all hover:border-orange-500 active:scale-95 text-left disabled:opacity-60">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="font-bold text-slate-900 text-lg">Absen Pulang</h3>
+                  <p id="label-pulang" class="text-xs text-slate-500 font-medium">Klik untuk pilih foto galeri</p>
                 </div>
-                <span id="badge-pulang" class="text-[10px] font-bold px-3 py-1 bg-slate-100 text-slate-400 rounded-full uppercase">Belum</span>
+                <div id="icon-pulang" class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center">
+                  <i data-lucide="log-out" class="w-6 h-6"></i>
+                </div>
               </div>
-              <button id="btn-pulang" onclick="triggerUpload('PULANG')" class="w-full py-4 bg-orange-500 text-white rounded-2xl font-bold shadow-lg shadow-orange-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
-                <i data-lucide="image" class="w-5 h-5"></i> Pilih Foto Pulang
-              </button>
-            </div>
+            </button>
           </div>
 
           <input type="file" id="universal-upload" accept="image/*" class="hidden" onchange="processUpload(event)">
 
           <div class="space-y-4 pt-4 border-t border-slate-100">
-            <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="history" class="w-5 h-5 text-emerald-500"></i> Riwayat Hari Ini</h3>
-            <div id="today-log" class="space-y-3"></div>
+            <h3 class="font-bold text-slate-800 flex items-center gap-2 text-lg"><i data-lucide="clock-3" class="w-5 h-5 text-emerald-500"></i> Riwayat Hari Ini</h3>
+            <div id="today-log" class="space-y-3">
+              </div>
           </div>
         </main>
       </div>
@@ -102,38 +113,50 @@
 
     <div id="page-admin" class="hidden min-h-screen py-8 px-4 fade-in">
         <div class="max-w-7xl mx-auto space-y-6">
-            <header class="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 rounded-[2rem] shadow-lg border">
+            <header class="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 rounded-[2.5rem] shadow-xl border">
               <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center"><i data-lucide="shield-check" class="w-7 h-7 text-emerald-600"></i></div>
-                <div><h2 id="admin-name" class="text-xl font-black text-slate-900 leading-tight">Panel Admin</h2><p class="text-sm font-bold text-emerald-600">SDK St. Yoseph Kuaputu</p></div>
+                <div class="w-14 h-14 rounded-full bg-slate-900 flex items-center justify-center shadow-lg"><i data-lucide="layout-dashboard" class="w-7 h-7 text-white"></i></div>
+                <div><h2 class="text-xl font-black text-slate-900 leading-tight">Admin Console</h2><p class="text-sm font-bold text-emerald-600">SDK St. Yoseph Kuaputu</p></div>
               </div>
-              <button onclick="logout()" class="px-6 py-3 rounded-xl bg-red-50 text-red-600 font-bold flex items-center gap-2 mt-4 md:mt-0"><i data-lucide="log-out" class="w-5 h-5"></i> Keluar</button>
+              <button onclick="logout()" class="px-6 py-3 rounded-2xl bg-red-50 text-red-600 font-bold flex items-center gap-2 mt-4 md:mt-0 transition-all hover:bg-red-100">Keluar</button>
             </header>
+            
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div class="space-y-6">
-                  <div class="bg-white p-6 rounded-[2rem] shadow-lg border">
-                    <h3 class="font-bold text-slate-400 uppercase text-xs mb-4">Statistik</h3>
-                    <div class="space-y-4">
-                      <div class="bg-emerald-50 border p-5 rounded-2xl"><p class="text-xs text-emerald-600 font-bold">MASUK HARI INI</p><p id="stat-hadir" class="text-4xl font-black text-emerald-700">0</p></div>
-                      <div class="bg-slate-50 border p-5 rounded-2xl"><p class="text-xs text-slate-500 font-bold">TOTAL DATA</p><p id="stat-total" class="text-4xl font-black text-slate-800">0</p></div>
+                    <div class="bg-white p-6 rounded-[2rem] shadow-lg border">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Live Statistics</p>
+                        <div class="grid grid-cols-2 lg:grid-cols-1 gap-4">
+                            <div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-100">
+                                <p class="text-[10px] font-black text-emerald-600 uppercase">Absen Masuk</p>
+                                <p id="stat-masuk" class="text-3xl font-black text-emerald-800">0</p>
+                            </div>
+                            <div class="bg-orange-50 p-5 rounded-2xl border border-orange-100">
+                                <p class="text-[10px] font-black text-orange-600 uppercase">Absen Pulang</p>
+                                <p id="stat-pulang" class="text-3xl font-black text-orange-800">0</p>
+                            </div>
+                        </div>
                     </div>
-                  </div>
-                  <button onclick="exportToExcel()" class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2"><i data-lucide="download" class="w-5 h-5"></i> Unduh CSV</button>
-                  <button onclick="resetData()" id="btn-reset" class="w-full py-4 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 hidden">Reset Semua Data</button>
+                    <button onclick="exportToExcel()" class="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-all hover:bg-slate-800"><i data-lucide="file-down" class="w-5 h-5"></i> Export CSV</button>
                 </div>
-                <div class="lg:col-span-3 bg-white p-6 rounded-[2rem] shadow-lg border h-[600px] flex flex-col">
-                  <div class="flex justify-between items-center mb-6">
-                     <h3 class="font-black text-slate-800 text-xl">Data Kehadiran</h3>
-                     <button onclick="refreshAdmin(event)" class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-bold flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Segarkan</button>
-                  </div>
-                  <div class="flex-1 overflow-auto rounded-2xl border bg-slate-50">
-                    <table class="w-full text-left min-w-[600px]">
-                      <thead class="bg-slate-100 sticky top-0 font-bold text-xs uppercase text-slate-500">
-                        <tr><th class="p-4">No</th><th class="p-4">Nama</th><th class="p-4">Waktu</th><th class="p-4">Status</th><th class="p-4">Foto</th></tr>
-                      </thead>
-                      <tbody id="admin-table-body" class="divide-y bg-white"></tbody>
-                    </table>
-                  </div>
+
+                <div class="lg:col-span-3 bg-white p-6 rounded-[2.5rem] shadow-xl border min-h-[500px]">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-black text-slate-900 text-xl">Database Absensi</h3>
+                        <button onclick="refreshAdmin(event)" class="p-2 bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-100"><i data-lucide="refresh-cw" class="w-5 h-5"></i></button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-[10px] font-black text-slate-400 uppercase border-b border-slate-50">
+                                    <th class="pb-4 pr-4">Nama</th>
+                                    <th class="pb-4 pr-4">Waktu</th>
+                                    <th class="pb-4 pr-4">Status</th>
+                                    <th class="pb-4 pr-4">Lampiran</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-table-body" class="divide-y divide-slate-50"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -142,6 +165,7 @@
   </div>
 
   <script>
+    // URL SCRIPT GOOGLE ANDA
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxqlhMHviBkUnn-HtpRBN5-1mfF2zzsR4RlSE-_9nHlcOdHXz2Rc57OEGKcH8igLjtgA/exec";
 
     const MASTER_USERS = [
@@ -161,7 +185,30 @@
 
     let currentUser = null;
     let globalDatabase = [];
-    let currentStatusMode = '';
+    let currentMode = '';
+
+    function showToast(title, message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const color = type === 'success' ? 'emerald' : 'red';
+      const icon = type === 'success' ? 'check-circle' : 'alert-circle';
+      
+      toast.className = `toast w-72 bg-white border-l-4 border-${color}-500 shadow-2xl rounded-xl p-4 mb-4 flex items-start gap-3`;
+      toast.innerHTML = `
+        <div class="text-${color}-500"><i data-lucide="${icon}" class="w-6 h-6"></i></div>
+        <div>
+          <p class="font-bold text-slate-900 text-sm">${title}</p>
+          <p class="text-xs text-slate-500 font-medium">${message}</p>
+        </div>
+      `;
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.5s forwards';
+        setTimeout(() => toast.remove(), 500);
+      }, 4000);
+    }
 
     function getTodayString() {
       const d = new Date();
@@ -169,33 +216,34 @@
     }
 
     async function handleLogin() {
-      const role = document.getElementById('login-role').value;
       const id = document.getElementById('login-id').value.trim();
+      const role = document.getElementById('login-role').value;
       const user = MASTER_USERS.find(u => String(u.id) === String(id) && u.role === role);
 
       if (user) {
         currentUser = user;
+        showToast('Login Berhasil', `Selamat datang, ${user.name}`);
+        document.getElementById('btn-login').innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Sinkronisasi...`;
         document.getElementById('btn-login').disabled = true;
-        document.getElementById('login-msg').classList.remove('hidden');
-        document.getElementById('login-msg').textContent = 'Sinkronisasi...';
-        
-        await fetchDatabase();
+        lucide.createIcons();
 
+        await fetchDatabase();
+        
         if (user.role === 'admin' || user.role === 'kepsek') {
           showPage('page-admin'); renderAdminDashboard();
         } else {
           showPage('page-guru'); renderGuruDashboard();
         }
       } else {
-        alert("Data tidak ditemukan!");
+        showToast('Gagal Masuk', 'NIP atau Username tidak ditemukan.', 'error');
       }
     }
 
     async function fetchDatabase() {
       try {
-        const response = await fetch(GOOGLE_SCRIPT_URL + "?t=" + Date.now());
-        globalDatabase = await response.json();
-      } catch (e) { console.error("Fetch error", e); }
+        const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + Date.now());
+        globalDatabase = await res.json();
+      } catch (e) { console.error(e); }
     }
 
     function showPage(id) {
@@ -204,47 +252,55 @@
       lucide.createIcons();
     }
 
-    function logout() { location.reload(); }
-
     function renderGuruDashboard() {
       document.getElementById('user-name').textContent = currentUser.name;
-      const today = getTodayString();
-      document.getElementById('current-date').textContent = today;
+      document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' });
       
-      const logs = globalDatabase.filter(a => String(a.id_user) === String(currentUser.id) && a.date === today);
-      const hasMasuk = logs.find(l => l.status === 'MASUK');
-      const hasPulang = logs.find(l => l.status === 'PULANG');
+      const today = getTodayString();
+      const myLogs = globalDatabase.filter(a => String(a.id_user) === String(currentUser.id) && a.date === today);
+      
+      const hasMasuk = myLogs.find(l => l.status === 'MASUK');
+      const hasPulang = myLogs.find(l => l.status === 'PULANG');
 
-      // Update Card Masuk
-      if (hasMasuk) {
-        document.getElementById('badge-masuk').innerText = "SUDAH";
-        document.getElementById('badge-masuk').className = "text-[10px] font-bold px-3 py-1 bg-emerald-100 text-emerald-600 rounded-full uppercase";
-        document.getElementById('btn-masuk').className = "w-full py-4 bg-slate-100 text-slate-400 rounded-2xl font-bold cursor-not-allowed";
-        document.getElementById('btn-masuk').disabled = true;
-        document.getElementById('btn-masuk').innerText = "Sudah Absen Masuk";
-      }
+      updateButtonStatus('masuk', hasMasuk);
+      updateButtonStatus('pulang', hasPulang);
 
-      // Update Card Pulang
-      if (hasPulang) {
-        document.getElementById('badge-pulang').innerText = "SUDAH";
-        document.getElementById('badge-pulang').className = "text-[10px] font-bold px-3 py-1 bg-orange-100 text-orange-600 rounded-full uppercase";
-        document.getElementById('btn-pulang').className = "w-full py-4 bg-slate-100 text-slate-400 rounded-2xl font-bold cursor-not-allowed";
-        document.getElementById('btn-pulang').disabled = true;
-        document.getElementById('btn-pulang').innerText = "Sudah Absen Pulang";
-      }
-
-      const list = document.getElementById('today-log');
-      list.innerHTML = logs.map(l => `
-        <div class="p-4 bg-white border border-slate-100 rounded-2xl flex justify-between items-center">
-          <div><p class="font-bold text-slate-800">${l.status}</p><p class="text-xs text-slate-500">${l.time}</p></div>
-          <i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>
+      const logContainer = document.getElementById('today-log');
+      logContainer.innerHTML = myLogs.length ? myLogs.map(l => `
+        <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 fade-in">
+          <div class="w-10 h-10 rounded-xl ${l.status === 'MASUK' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'} flex items-center justify-center font-bold text-xs">${l.status[0]}</div>
+          <div class="flex-1">
+            <p class="font-bold text-slate-800 text-sm">Absen ${l.status}</p>
+            <p class="text-[10px] text-slate-400 font-bold uppercase">${l.time}</p>
+          </div>
+          <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
         </div>
-      `).join('');
+      `).join('') : `<p class="text-center text-slate-300 text-sm italic py-4">Belum ada aktivitas hari ini</p>`;
       lucide.createIcons();
     }
 
+    function updateButtonStatus(type, data) {
+      const btn = document.getElementById(`btn-absen-${type}`);
+      const label = document.getElementById(`label-${type}`);
+      const icon = document.getElementById(`icon-${type}`);
+      const pill = document.getElementById(`status-${type}-pill`);
+
+      if (data) {
+        btn.disabled = true;
+        btn.classList.add('bg-slate-50', 'border-slate-100');
+        btn.classList.remove('hover:border-emerald-500', 'hover:border-orange-500');
+        label.innerHTML = `<span class="text-emerald-600 font-bold">Sudah Terkirim pukul ${data.time}</span>`;
+        icon.className = "w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200";
+        icon.innerHTML = `<i data-lucide="check" class="w-6 h-6"></i>`;
+        pill.innerHTML = `${type.toUpperCase()}: ${data.time}`;
+        pill.classList.add('bg-emerald-500/20', 'text-emerald-400');
+      } else {
+        pill.innerHTML = `${type.toUpperCase()}: -`;
+      }
+    }
+
     function triggerUpload(mode) {
-      currentStatusMode = mode;
+      currentMode = mode;
       document.getElementById('universal-upload').click();
     }
 
@@ -252,85 +308,89 @@
       const file = event.target.files[0];
       if (!file) return;
 
-      const targetBtn = currentStatusMode === 'MASUK' ? document.getElementById('btn-masuk') : document.getElementById('btn-pulang');
-      targetBtn.innerText = "Mengunggah...";
-      targetBtn.disabled = true;
-      document.getElementById('app').style.opacity = "0.5";
-
-      // Ambil Lokasi (Opsional untuk data)
-      let koordinat = "Lokasi tidak diizinkan";
-      try {
-        const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout: 5000}));
-        koordinat = `${pos.coords.latitude}, ${pos.coords.longitude}`;
-      } catch (e) {}
+      const btn = document.getElementById(`btn-absen-${currentMode.toLowerCase()}`);
+      btn.innerHTML = `<div class="flex justify-center items-center w-full py-2"><i data-lucide="loader-2" class="w-6 h-6 animate-spin text-emerald-500"></i></div>`;
+      btn.disabled = true;
 
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = async function(e) {
         const img = new Image();
-        img.onload = function() {
+        img.onload = async function() {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
-          const MAX_WIDTH = 600;
-          canvas.width = MAX_WIDTH;
-          canvas.height = img.height * (MAX_WIDTH / img.width);
+          canvas.width = 600;
+          canvas.height = img.height * (600 / img.width);
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-          // Watermark Waktu
-          ctx.font = "bold 20px Arial";
+          // Watermark
           ctx.fillStyle = "white";
-          ctx.shadowColor = "black"; ctx.shadowBlur = 4;
-          ctx.fillText(`${new Date().toLocaleString('id-ID')} | ${currentStatusMode}`, 20, canvas.height - 20);
+          ctx.font = "bold 18px Arial";
+          ctx.shadowColor = "black"; ctx.shadowBlur = 5;
+          ctx.fillText(`SDK ST. YOSEPH | ${new Date().toLocaleString('id-ID')}`, 20, canvas.height - 25);
 
           const payload = {
             id_user: String(currentUser.id),
             name: currentUser.name,
             date: getTodayString(),
-            time: new Date().toLocaleTimeString('id-ID'),
-            status: currentStatusMode,
-            note: "Lokasi: " + koordinat,
+            time: new Date().toLocaleTimeString('id-ID', { hour12: false }),
+            status: currentMode,
             photo: canvas.toDataURL('image/jpeg', 0.7)
           };
 
-          fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
-            .then(() => {
-              alert("Absen " + currentStatusMode + " Berhasil!");
-              location.reload();
-            })
-            .catch(() => {
-              alert("Gagal mengirim data. Coba lagi.");
-              location.reload();
-            });
-        }
+          try {
+            const res = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            showToast('Absen Berhasil', `Data absen ${currentMode} Anda sudah masuk database.`);
+            await fetchDatabase();
+            renderGuruDashboard();
+          } catch (err) {
+            showToast('Gagal Mengirim', 'Koneksi bermasalah, silakan coba lagi.', 'error');
+            renderGuruDashboard(); // reset button state
+          }
+        };
         img.src = e.target.result;
-      }
+      };
       reader.readAsDataURL(file);
     }
 
-    // Fungsi Admin (Tetap sama)
     function renderAdminDashboard() {
-      document.getElementById('btn-reset').classList.toggle('hidden', currentUser.role !== 'admin');
       const today = getTodayString();
-      document.getElementById('stat-hadir').textContent = globalDatabase.filter(a => a.date === today && a.status === 'MASUK').length;
-      document.getElementById('stat-total').textContent = globalDatabase.length;
+      document.getElementById('stat-masuk').textContent = globalDatabase.filter(a => a.date === today && a.status === 'MASUK').length;
+      document.getElementById('stat-pulang').textContent = globalDatabase.filter(a => a.date === today && a.status === 'PULANG').length;
+      
       const tbody = document.getElementById('admin-table-body');
-      tbody.innerHTML = [...globalDatabase].reverse().map((a, i) => `
-        <tr>
-          <td class="p-4 text-xs font-bold">${i+1}</td>
-          <td class="p-4 font-bold">${a.name}</td>
-          <td class="p-4 text-xs">${a.date} ${a.time}</td>
-          <td class="p-4"><span class="px-2 py-1 ${a.status === 'MASUK' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'} rounded-lg text-[10px] font-bold">${a.status}</span></td>
-          <td class="p-4"><a href="${a.photo_url || '#'}" target="_blank" class="text-blue-500 font-bold text-xs">Lihat Foto</a></td>
+      tbody.innerHTML = [...globalDatabase].reverse().map(a => `
+        <tr class="text-sm">
+          <td class="py-4 pr-4 font-bold text-slate-800">${a.name}</td>
+          <td class="py-4 pr-4 text-xs font-medium text-slate-500">${a.date}<br>${a.time}</td>
+          <td class="py-4 pr-4">
+            <span class="px-2 py-1 ${a.status === 'MASUK' ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'} rounded-lg text-[9px] font-black">${a.status}</span>
+          </td>
+          <td class="py-4 pr-4">
+            <a href="${a.photo_url}" target="_blank" class="text-blue-600 font-bold text-xs hover:underline">View Photo</a>
+          </td>
         </tr>
       `).join('');
+      lucide.createIcons();
     }
 
-    async function refreshAdmin(e) { e.target.disabled = true; await fetchDatabase(); renderAdminDashboard(); e.target.disabled = false; lucide.createIcons(); }
-    function exportToExcel() {
-      let csv = "Nama,Tanggal,Jam,Status,Note,Foto\n";
-      globalDatabase.forEach(r => csv += `"${r.name}","${r.date}","${r.time}","${r.status}","${r.note}","${r.photo_url}"\n`);
-      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'absen.csv'; a.click();
+    async function refreshAdmin(e) {
+      e.currentTarget.classList.add('animate-spin');
+      await fetchDatabase();
+      renderAdminDashboard();
+      e.currentTarget.classList.remove('animate-spin');
     }
-    async function resetData() { if (confirm("Hapus semua data?")) { await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'clear' }) }); location.reload(); } }
+
+    function exportToExcel() {
+      let csv = "Nama,Tanggal,Jam,Status,Link Foto\n";
+      globalDatabase.forEach(r => csv += `"${r.name}","${r.date}","${r.time}","${r.status}","${r.photo_url}"\n`);
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `Absensi_SDK_Yoseph_${getTodayString()}.csv`;
+      a.click();
+    }
+
+    function logout() { location.reload(); }
 
     lucide.createIcons();
   </script>
