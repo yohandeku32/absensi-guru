@@ -73,9 +73,9 @@
           </div>
 
           <div class="grid grid-cols-1 gap-4">
-            <button id="btn-absen-masuk" onclick="triggerUpload('MASUK')" class="group p-6 bg-white border-2 border-slate-100 rounded-[2rem] transition-all hover:border-emerald-500 active:scale-95 text-left">
-              <div class="flex justify-between items-center" id="container-masuk">
-                <div id="text-masuk">
+            <button id="btn-absen-masuk" onclick="triggerUpload('MASUK')" class="group p-6 bg-white border-2 border-slate-100 rounded-[2rem] transition-all hover:border-emerald-500 active:scale-95 text-left relative">
+              <div class="flex justify-between items-center w-full">
+                <div>
                   <h3 class="font-bold text-slate-900 text-lg">Absen Masuk</h3>
                   <p id="label-masuk" class="text-xs text-slate-500 font-medium">Klik untuk upload foto</p>
                 </div>
@@ -85,9 +85,9 @@
               </div>
             </button>
 
-            <button id="btn-absen-pulang" onclick="triggerUpload('PULANG')" class="group p-6 bg-white border-2 border-slate-100 rounded-[2rem] transition-all hover:border-orange-500 active:scale-95 text-left">
-              <div class="flex justify-between items-center" id="container-pulang">
-                <div id="text-pulang">
+            <button id="btn-absen-pulang" onclick="triggerUpload('PULANG')" class="group p-6 bg-white border-2 border-slate-100 rounded-[2rem] transition-all hover:border-orange-500 active:scale-95 text-left relative">
+              <div class="flex justify-between items-center w-full">
+                <div>
                   <h3 class="font-bold text-slate-900 text-lg">Absen Pulang</h3>
                   <p id="label-pulang" class="text-xs text-slate-500 font-medium">Klik untuk upload foto</p>
                 </div>
@@ -113,13 +113,14 @@
             <button onclick="logout()" class="mb-4 px-4 py-2 bg-slate-800 text-white rounded-lg font-bold">Logout Admin</button>
             <div class="bg-white rounded-3xl p-6 shadow-xl border border-slate-100">
                 <h2 class="text-2xl font-bold mb-4">Dashboard Monitoring</h2>
-                <p class="text-slate-500">Data absensi akan muncul di sini (Halaman khusus admin).</p>
+                <p class="text-slate-500">Data absensi (Khusus Admin).</p>
             </div>
         </div>
     </div>
   </div>
 
   <script>
+    // URL SCRIPT GOOGLE ANDA
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxqlhMHviBkUnn-HtpRBN5-1mfF2zzsR4RlSE-_9nHlcOdHXz2Rc57OEGKcH8igLjtgA/exec";
 
     const MASTER_USERS = [
@@ -168,7 +169,7 @@
         globalDatabase = Array.isArray(data) ? data : [];
         return true;
       } catch (e) {
-        console.error("Fetch error:", e);
+        console.log("Belum ada data atau fungsi doGet belum diaktifkan di App Script.");
         return false;
       }
     }
@@ -209,11 +210,18 @@
     function renderGuruDashboard() {
       if (!currentUser) return;
       
+      // Update Profil Header
       document.getElementById('user-name').textContent = currentUser.name;
       document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' });
       
       const today = getTodayString();
-      const myLogs = globalDatabase.filter(a => String(a.id_user) === String(currentUser.id) && a.date === today);
+      
+      // Pencarian Riwayat Hari Ini (Toleransi terhadap format tanggal Google Sheets)
+      const myLogs = globalDatabase.filter(a => {
+         const isUser = String(a.id_user) === String(currentUser.id);
+         const isToday = String(a.date).includes(today);
+         return isUser && isToday;
+      });
       
       const hasMasuk = myLogs.find(l => l.status === 'MASUK');
       const hasPulang = myLogs.find(l => l.status === 'PULANG');
@@ -222,17 +230,20 @@
       updateButtonVisual('pulang', hasPulang);
 
       const logContainer = document.getElementById('today-log');
-      logContainer.innerHTML = myLogs.length ? myLogs.map(l => `
-        <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 fade-in">
-          <div class="w-10 h-10 rounded-xl ${l.status === 'MASUK' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'} flex items-center justify-center font-bold text-xs">${l.status[0]}</div>
-          <div class="flex-1">
-            <p class="font-bold text-slate-800 text-sm">Absen ${l.status}</p>
-            <p class="text-[10px] text-slate-400 font-bold uppercase">${l.time}</p>
+      if (myLogs.length > 0) {
+        logContainer.innerHTML = myLogs.map(l => `
+          <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 fade-in">
+            <div class="w-10 h-10 rounded-xl ${l.status === 'MASUK' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'} flex items-center justify-center font-bold text-xs">${l.status[0]}</div>
+            <div class="flex-1">
+              <p class="font-bold text-slate-800 text-sm">Absen ${l.status}</p>
+              <p class="text-[10px] text-slate-400 font-bold uppercase">${l.time}</p>
+            </div>
+            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
           </div>
-          <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
-        </div>
-      `).join('') : `<p class="text-center text-slate-300 text-sm italic py-4">Belum ada riwayat hari ini</p>`;
-      
+        `).join('');
+      } else {
+        logContainer.innerHTML = `<p class="text-center text-slate-400 text-sm italic py-4">Belum ada riwayat hari ini</p>`;
+      }
       lucide.createIcons();
     }
 
@@ -242,20 +253,21 @@
       const icon = document.getElementById(`icon-${type}`);
       const pill = document.getElementById(`status-${type}-pill`);
 
+      // Safety Guard agar tidak error jika elemen tidak ditemukan
+      if (!btn || !label || !icon || !pill) return;
+
       if (data) {
         btn.disabled = true;
-        btn.classList.replace('bg-white', 'bg-slate-50');
-        btn.classList.add('opacity-70', 'border-slate-200');
+        btn.className = "group p-6 bg-slate-50 border-2 border-slate-100 rounded-[2rem] opacity-70 text-left cursor-not-allowed";
         label.innerHTML = `<span class="text-emerald-600 font-bold">Sudah Absen (${data.time})</span>`;
-        icon.className = "w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center";
+        icon.className = "w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg";
         icon.innerHTML = `<i data-lucide="check" class="w-6 h-6"></i>`;
         
         pill.textContent = `${type.toUpperCase()}: ${data.time}`;
-        pill.className = "px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-[10px] font-bold border border-emerald-500/20 uppercase";
+        pill.className = "px-3 py-1 bg-emerald-500/20 text-emerald-500 rounded-full text-[10px] font-bold border border-emerald-500/20 uppercase";
       } else {
         btn.disabled = false;
-        btn.classList.replace('bg-slate-50', 'bg-white');
-        btn.classList.remove('opacity-70', 'border-slate-200');
+        btn.className = `group p-6 bg-white border-2 border-slate-100 rounded-[2rem] transition-all hover:border-${type === 'masuk' ? 'emerald' : 'orange'}-500 active:scale-95 text-left`;
         label.innerText = "Klik untuk upload foto";
         icon.className = `w-12 h-12 ${type === 'masuk' ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'} rounded-2xl flex items-center justify-center`;
         icon.innerHTML = `<i data-lucide="${type === 'masuk' ? 'log-in' : 'log-out'}" class="w-6 h-6"></i>`;
@@ -275,11 +287,18 @@
       const file = event.target.files[0];
       if (!file || !currentUser) return;
 
-      const container = document.getElementById(`container-${currentMode.toLowerCase()}`);
-      const oldContent = container.innerHTML;
+      const typeLower = currentMode.toLowerCase();
+      const btn = document.getElementById(`btn-absen-${typeLower}`);
+      const label = document.getElementById(`label-${typeLower}`);
+      const icon = document.getElementById(`icon-${typeLower}`);
       
-      // Loading State
-      container.innerHTML = `<div class="flex items-center gap-4 py-2"><i data-lucide="loader-2" class="w-8 h-8 animate-spin text-emerald-500"></i><p class="font-bold text-sm text-emerald-600">Mengirim data...</p></div>`;
+      const oldLabel = label.innerHTML;
+      const oldIcon = icon.innerHTML;
+      
+      // PERBAIKAN BUG: Ubah teks tanpa menghancurkan elemen ID
+      btn.disabled = true;
+      label.innerHTML = `<span class="text-emerald-500 font-bold">Mengirim data...</span>`;
+      icon.innerHTML = `<i data-lucide="loader-2" class="w-6 h-6 animate-spin text-emerald-500"></i>`;
       lucide.createIcons();
 
       const reader = new FileReader();
@@ -294,17 +313,14 @@
         };
 
         try {
-          // Fix False Alarm: Pakai no-cors dan tidak memproses res.json() karena GS redirect 302
           await fetch(GOOGLE_SCRIPT_URL, { 
             method: 'POST', 
             mode: 'no-cors',
             body: JSON.stringify(payload) 
           });
 
-          // Sukses (Asumsi karena no-cors tidak bisa baca body response)
           showToast('Berhasil', `Absen ${currentMode} terkirim.`);
           
-          // Beri jeda 1.5 detik sebelum sinkronisasi ulang agar data sempat tertulis di Sheet
           setTimeout(async () => {
               await fetchDatabase();
               renderGuruDashboard();
@@ -312,7 +328,10 @@
 
         } catch (err) {
           showToast('Error', 'Gagal koneksi ke server.', 'error');
-          container.innerHTML = oldContent;
+          // Jika gagal, kembalikan ke awal
+          label.innerHTML = oldLabel;
+          icon.innerHTML = oldIcon;
+          btn.disabled = false;
           lucide.createIcons();
         }
       };
