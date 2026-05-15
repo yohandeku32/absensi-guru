@@ -12,14 +12,23 @@
     body { background-color: #f8fafc; }
     .fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-    .loader { border: 3px solid #f3f3f3; border-top: 3px solid #10b981; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
+    
+    /* Global Loader */
+    .loader-spin { border: 4px solid #f3f3f3; border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    .loader-small { border: 2px solid #f3f3f3; border-top: 2px solid #10b981; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @media print { .no-print { display: none !important; } .show-on-print { display: block !important; } }
-    .show-on-print { display: none; }
-    .img-preview-admin { width: 60px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; }
+    
+    #global-loader { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; items-center; justify-content: center; gap: 1rem; transition: opacity 0.3s ease; }
+    
+    @media print { .no-print { display: none !important; } }
   </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col">
+
+  <div id="global-loader">
+    <div class="loader-spin"></div>
+    <p class="text-slate-500 font-bold animate-pulse">Menyiapkan Data...</p>
+  </div>
 
   <div id="app" class="flex-1 w-full relative">
     
@@ -37,7 +46,7 @@
             <option value="admin">Administrator</option>
           </select>
           <input id="login-id" type="text" placeholder="Masukkan NIP / Username" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none">
-          <button onclick="handleLogin()" class="w-full py-4 bg-emerald-500 text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all">MASUK ABSEN</button>
+          <button id="btn-login" onclick="handleLogin()" class="w-full py-4 bg-emerald-500 text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all">MASUK ABSEN</button>
         </div>
       </div>
     </div>
@@ -101,10 +110,10 @@
             </div>
 
             <div class="flex justify-end gap-3 mb-4 no-print">
-                <button id="btn-reset-data" onclick="handleResetData()" class="px-6 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg flex items-center gap-2 hover:bg-red-700 transition-all active:scale-95">
+                <button id="btn-reset-data" onclick="handleResetData()" class="px-6 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg flex items-center gap-2 hover:bg-red-700 transition-all">
                     <i data-lucide="trash-2" class="w-5 h-5"></i> Reset Semua Data
                 </button>
-                <button onclick="window.print()" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg flex items-center gap-2 hover:bg-blue-700 transition-all active:scale-95">
+                <button onclick="window.print()" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg flex items-center gap-2">
                     <i data-lucide="printer" class="w-5 h-5"></i> Cetak Laporan
                 </button>
             </div>
@@ -147,20 +156,45 @@
         const savedUser = localStorage.getItem('absen_user_session');
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
-            await fetchDatabase();
-            if (currentUser.role === 'admin') { 
-                showPage('page-admin'); 
-                renderAdminDetail(); 
-            } else { 
-                showPage('page-guru'); 
-                renderGuruDashboard(); 
-            }
-        } else { showPage('page-login'); }
+            await initApp();
+        } else { 
+            hideGlobalLoader();
+            showPage('page-login'); 
+        }
         lucide.createIcons();
     };
 
+    async function initApp() {
+        showGlobalLoader("Memuat database...");
+        await fetchDatabase();
+        if (currentUser.role === 'admin') { 
+            showPage('page-admin'); 
+            renderAdminDetail(); 
+        } else { 
+            showPage('page-guru'); 
+            renderGuruDashboard(); 
+        }
+        hideGlobalLoader();
+    }
+
+    function showGlobalLoader(text = "Menyiapkan Data...") {
+        const loader = document.getElementById('global-loader');
+        loader.querySelector('p').textContent = text;
+        loader.style.display = 'flex';
+        loader.style.opacity = '1';
+    }
+
+    function hideGlobalLoader() {
+        const loader = document.getElementById('global-loader');
+        loader.style.opacity = '0';
+        setTimeout(() => { loader.style.display = 'none'; }, 300);
+    }
+
     async function fetchDatabase() {
-        try { const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + Date.now()); globalDatabase = await res.json(); } catch (e) { console.error(e); }
+        try { 
+            const res = await fetch(GOOGLE_SCRIPT_URL + "?t=" + Date.now()); 
+            globalDatabase = await res.json(); 
+        } catch (e) { console.error(e); }
     }
 
     function renderGuruDashboard() {
@@ -215,10 +249,12 @@
 
     async function processUpload(event) {
         const file = event.target.files[0]; if (!file) return;
+        
+        // Disable tombol & beri loading lokal
         const btn = document.getElementById(`btn-absen-${currentMode.toLowerCase()}`);
-        const oldContent = btn.innerHTML;
-        btn.innerHTML = '<div><div class="loader mr-2"></div><span class="font-bold">Mengirim...</span></div>';
+        const originalHTML = btn.innerHTML;
         btn.disabled = true;
+        btn.innerHTML = `<div><h3 class="font-bold text-slate-900 text-lg">Mengirim...</h3><p class="text-xs text-slate-500 font-medium">Mohon tunggu sebentar</p></div><div class="loader-small"></div>`;
 
         const reader = new FileReader();
         reader.onload = async function(e) {
@@ -235,42 +271,30 @@
                 document.getElementById('modal-success').classList.remove('hidden');
             } catch (err) {
                 alert("Gagal mengirim.");
-                btn.innerHTML = oldContent;
                 btn.disabled = false;
+                btn.innerHTML = originalHTML;
             }
         };
         reader.readAsDataURL(file);
     }
 
-    // FUNGSI RESET DATA UNTUK ADMIN
     async function handleResetData() {
-        const confirmHapus = confirm("⚠️ PERINGATAN: Apakah Anda yakin ingin menghapus SEMUA data absensi di Spreadsheet? Tindakan ini tidak bisa dibatalkan!");
-        if (!confirmHapus) return;
-
-        const btn = document.getElementById('btn-reset-data');
-        const oldContent = btn.innerHTML;
-        btn.innerHTML = '<div class="loader mr-2"></div> Menghapus...';
-        btn.disabled = true;
-
+        if (!confirm("⚠️ APAKAH ANDA YAKIN? Semua data absensi di Spreadsheet akan dihapus permanen!")) return;
+        
+        showGlobalLoader("Menghapus data...");
         try {
-            const payload = { action: 'clear' };
-            await fetch(GOOGLE_SCRIPT_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify(payload) 
-            });
-            alert("Data Spreadsheet berhasil dikosongkan!");
+            await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'clear' }) });
+            alert("Data berhasil direset!");
             location.reload();
-        } catch (err) {
-            alert("Gagal menghapus data.");
-            btn.innerHTML = oldContent;
-            btn.disabled = false;
+        } catch (error) {
+            alert("Gagal mereset data.");
+            hideGlobalLoader();
         }
     }
 
     function closeModal() {
         document.getElementById('modal-success').classList.add('hidden');
-        location.reload();
+        location.reload(); // Ini akan memicu Global Loader saat refresh
     }
 
     function renderAdminDetail() {
@@ -300,12 +324,24 @@
         lucide.createIcons();
     }
 
-    function handleLogin() {
-        const id = document.getElementById('login-id').value.trim(), role = document.getElementById('login-role').value;
+    async function handleLogin() {
+        const id = document.getElementById('login-id').value.trim();
+        const role = document.getElementById('login-role').value;
         const user = MASTER_USERS.find(u => String(u.id) === id && u.role === role);
-        if (user) { localStorage.setItem('absen_user_session', JSON.stringify(user)); location.reload(); }
-        else alert("ID atau Peran salah!");
+        
+        if (user) { 
+            const btn = document.getElementById('btn-login');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="loader-small mr-2"></span> Memproses...`;
+            
+            localStorage.setItem('absen_user_session', JSON.stringify(user)); 
+            currentUser = user;
+            await initApp(); // Pindah ke dashboard dengan Global Loader
+        } else { 
+            alert("ID atau Peran salah!"); 
+        }
     }
+
     function logout() { localStorage.removeItem('absen_user_session'); location.reload(); }
     function showPage(id) { document.querySelectorAll('#app > div').forEach(d => d.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); lucide.createIcons(); }
   </script>
