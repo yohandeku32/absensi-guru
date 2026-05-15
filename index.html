@@ -24,7 +24,7 @@
 
   <div id="app" class="flex-1 w-full relative">
     
-    <div id="page-login" class="min-h-screen flex items-center justify-center p-4 fade-in">
+    <div id="page-login" class="hidden min-h-screen flex items-center justify-center p-4 fade-in">
       <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 text-center">
         <div class="w-20 h-20 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl rotate-3">
           <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
@@ -125,22 +125,49 @@
 
     const MASTER_USERS = [
       { id: 'admin', name: 'Admin Sistem', role: 'admin' },
-      { id: '100', name: 'Wilhelmina Kasih, S.Ag,S.Pd', role: 'kepsek' },
-      { id: '101', name: 'Ambrosius Sina, S.Pd', role: 'guru' },
-      { id: '102', name: 'Trifosa Rabe, S.Pd', role: 'guru' },
-      { id: '103', name: 'Priska Oni, S.Pd', role: 'guru' },
-      { id: '104', name: 'Flavianus V. Tumpung, S.Pd', role: 'guru' },
-      { id: '105', name: 'Maria Junista Menge, S.Pd', role: 'guru' },
-      { id: '106', name: 'Novi Mariana Loinati, S.Pd', role: 'guru' },
-      { id: '107', name: 'Maria Yunita Lanus, S.Pd', role: 'guru' },
-      { id: '108', name: 'Yohana Yusarli Nenobesi, S.Pd', role: 'guru' },
-      { id: '109', name: 'Stefanus Leli, S.Pd', role: 'guru' },
-      { id: '110', name: 'Yohanes Ignasius T. Deku (TU)', role: 'pegawai' },
+      { id: '111321452', name: 'Wilhelmina Kasih, S.Ag,S.Pd', role: 'kepsek' },
+      { id: '196706041991101001', name: 'Ambrosius Sina, S.Pd', role: 'guru' },
+      { id: '196904212005012006', name: 'Trifosa Rabe, S.Pd', role: 'guru' },
+      { id: '197301152000122002', name: 'Priska Oni, S.Pd', role: 'guru' },
+      { id: '197007272000121007', name: 'Flavianus V. Tumpung, S.Pd', role: 'guru' },
+      { id: '111321732', name: 'Maria Junista Menge, S.Pd', role: 'guru' },
+      { id: '111321555', name: 'Novi Mariana Loinati, S.Pd', role: 'guru' },
+      { id: '111321584', name: 'Maria Yunita Lanus, S.Pd', role: 'guru' },
+      { id: '111321753', name: 'Yohana Yusarli Nenobesi, S.Pd', role: 'guru' },
+      { id: '101', name: 'Stefanus Leli, S.Pd', role: 'guru' },
+      { id: '102', name: 'Yohanes Ignasius T. Deku (TU)', role: 'pegawai' },
     ];
 
     let currentUser = null;
     let globalDatabase = [];
     let currentMode = '';
+
+    // ==========================================
+    // FITUR: CEK SESI LOGIN SAAT WEB DIBUKA
+    // ==========================================
+    window.onload = async function() {
+      const savedUser = localStorage.getItem('absen_user_session');
+      
+      if (savedUser) {
+        // Jika ada data login di memori browser
+        currentUser = JSON.parse(savedUser);
+        
+        if (currentUser.role === 'admin' || currentUser.role === 'kepsek') {
+          showPage('page-admin');
+        } else {
+          showPage('page-guru');
+          document.getElementById('user-name').textContent = currentUser.name;
+          showToast('Menyinkronkan', 'Mengambil data riwayat terbaru...', 'success');
+          
+          await fetchDatabase();
+          renderGuruDashboard();
+        }
+      } else {
+        // Jika tidak ada memori login, tampilkan form login
+        showPage('page-login');
+      }
+      lucide.createIcons();
+    };
 
     function showToast(title, message, type = 'success') {
       const container = document.getElementById('toast-container');
@@ -169,7 +196,7 @@
         globalDatabase = Array.isArray(data) ? data : [];
         return true;
       } catch (e) {
-        console.log("Belum ada data atau fungsi doGet belum diaktifkan di App Script.");
+        console.log("Gagal memuat database:", e);
         return false;
       }
     }
@@ -189,7 +216,10 @@
       btn.disabled = true;
       lucide.createIcons();
 
+      // SIMPAN SESI KE MEMORI BROWSER
       currentUser = user;
+      localStorage.setItem('absen_user_session', JSON.stringify(user));
+
       await fetchDatabase();
       
       if (user.role === 'admin' || user.role === 'kepsek') {
@@ -199,6 +229,10 @@
         renderGuruDashboard();
       }
       showToast('Berhasil', `Selamat datang, ${user.name}`);
+      
+      // Kembalikan tombol login seperti semula jika nanti logout
+      btn.innerHTML = `Masuk Sekarang`;
+      btn.disabled = false;
     }
 
     function showPage(id) {
@@ -210,13 +244,12 @@
     function renderGuruDashboard() {
       if (!currentUser) return;
       
-      // Update Profil Header
       document.getElementById('user-name').textContent = currentUser.name;
       document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' });
       
       const today = getTodayString();
       
-      // Pencarian Riwayat Hari Ini (Toleransi terhadap format tanggal Google Sheets)
+      // Pencarian Riwayat HANYA untuk hari ini (Otomatis reset jika besok)
       const myLogs = globalDatabase.filter(a => {
          const isUser = String(a.id_user) === String(currentUser.id);
          const isToday = String(a.date).includes(today);
@@ -253,7 +286,6 @@
       const icon = document.getElementById(`icon-${type}`);
       const pill = document.getElementById(`status-${type}-pill`);
 
-      // Safety Guard agar tidak error jika elemen tidak ditemukan
       if (!btn || !label || !icon || !pill) return;
 
       if (data) {
@@ -295,7 +327,6 @@
       const oldLabel = label.innerHTML;
       const oldIcon = icon.innerHTML;
       
-      // PERBAIKAN BUG: Ubah teks tanpa menghancurkan elemen ID
       btn.disabled = true;
       label.innerHTML = `<span class="text-emerald-500 font-bold">Mengirim data...</span>`;
       icon.innerHTML = `<i data-lucide="loader-2" class="w-6 h-6 animate-spin text-emerald-500"></i>`;
@@ -328,7 +359,6 @@
 
         } catch (err) {
           showToast('Error', 'Gagal koneksi ke server.', 'error');
-          // Jika gagal, kembalikan ke awal
           label.innerHTML = oldLabel;
           icon.innerHTML = oldIcon;
           btn.disabled = false;
@@ -339,8 +369,13 @@
       event.target.value = ''; 
     }
 
-    function logout() { location.reload(); }
-    lucide.createIcons();
+    // ==========================================
+    // FITUR: LOGOUT MENGHAPUS SESI DARI MEMORI
+    // ==========================================
+    function logout() { 
+      localStorage.removeItem('absen_user_session'); // Hapus data login
+      location.reload(); // Refresh halaman (akan otomatis kembali ke login)
+    }
   </script>
 </body>
 </html>
