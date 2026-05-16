@@ -64,21 +64,31 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 gap-4">
+          <div class="grid grid-cols-1 gap-5">
             <div id="upload-progress-container" class="progress-wrapper">
                 <div id="upload-progress-bar" class="progress-bar"></div>
             </div>
 
-            <button id="btn-absen-masuk" onclick="triggerUpload('MASUK')" class="p-6 bg-white border-2 border-slate-100 rounded-[2rem] text-left flex justify-between items-center hover:border-emerald-500 transition-all active:scale-95">
-              <div><h3 id="txt-masuk" class="font-bold text-slate-900 text-lg">Absen Masuk</h3><p id="label-masuk" class="text-xs text-slate-500 font-medium">Klik untuk upload foto</p></div>
-              <div id="icon-masuk" class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center"><i data-lucide="log-in"></i></div>
+            <button id="btn-absen-masuk" onclick="triggerUpload('MASUK'); document.getElementById('label-masuk').style.display='none';" class="p-6 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-[2rem] text-left flex justify-between items-center shadow-lg shadow-emerald-500/40 hover:shadow-xl hover:-translate-y-1 hover:shadow-emerald-500/50 transition-all duration-300 active:scale-95 border-none">
+              <div>
+                <h3 id="txt-masuk" class="font-extrabold text-white text-xl drop-shadow-md">Absen Masuk</h3>
+                <p id="label-masuk" class="text-emerald-50 text-sm font-medium opacity-90 mt-1">Klik untuk upload foto</p>
+              </div>
+              <div id="icon-masuk" class="w-14 h-14 bg-white/20 backdrop-blur-md text-white rounded-2xl flex items-center justify-center shadow-inner">
+                <i data-lucide="log-in" class="w-7 h-7"></i>
+              </div>
             </button>
-            <button id="btn-absen-pulang" onclick="triggerUpload('PULANG')" class="p-6 bg-white border-2 border-slate-100 rounded-[2rem] text-left flex justify-between items-center hover:border-orange-500 transition-all active:scale-95">
-              <div><h3 id="txt-pulang" class="font-bold text-slate-900 text-lg">Absen Pulang</h3><p id="label-pulang" class="text-xs text-slate-500 font-medium">Klik untuk upload foto</p></div>
-              <div id="icon-pulang" class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center"><i data-lucide="log-out"></i></div>
+            
+            <button id="btn-absen-pulang" onclick="triggerUpload('PULANG'); document.getElementById('label-pulang').style.display='none';" class="p-6 bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-[2rem] text-left flex justify-between items-center shadow-lg shadow-orange-500/40 hover:shadow-xl hover:-translate-y-1 hover:shadow-orange-500/50 transition-all duration-300 active:scale-95 border-none">
+              <div>
+                <h3 id="txt-pulang" class="font-extrabold text-white text-xl drop-shadow-md">Absen Pulang</h3>
+                <p id="label-pulang" class="text-orange-50 text-sm font-medium opacity-90 mt-1">Klik untuk upload foto</p>
+              </div>
+              <div id="icon-pulang" class="w-14 h-14 bg-white/20 backdrop-blur-md text-white rounded-2xl flex items-center justify-center shadow-inner">
+                <i data-lucide="log-out" class="w-7 h-7"></i>
+              </div>
             </button>
           </div>
-
           <input type="file" id="universal-upload" accept="image/*" class="hidden" onchange="processUpload(event)">
 
           <div class="space-y-4 pt-4 border-t border-slate-100">
