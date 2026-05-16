@@ -19,6 +19,12 @@
         color: #ffffff !important;
         stroke: #ffffff !important;
     }
+    
+    /* Otomatis sembunyikan tulisan kecil jika tombol dalam keadaan didisable (sudah absen) */
+    button:disabled #label-masuk, button:disabled #icon-masuk,
+    button:disabled #label-pulang, button:disabled #icon-pulang {
+        display: none !important;
+    }
   </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col">
@@ -77,7 +83,7 @@
                 <div id="upload-progress-bar" class="progress-bar"></div>
             </div>
 
-            <button id="btn-absen-masuk" onclick="triggerUpload('MASUK'); document.getElementById('label-masuk').style.display='none'; document.getElementById('icon-masuk').style.display='none';" class="p-6 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-[2rem] text-left flex justify-between items-center shadow-lg shadow-emerald-500/40 hover:shadow-xl hover:-translate-y-1 hover:shadow-emerald-500/50 transition-all duration-300 active:scale-95 border-none">
+            <button id="btn-absen-masuk" onclick="triggerUpload('MASUK');" class="p-6 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-[2rem] text-left flex justify-between items-center shadow-lg shadow-emerald-500/40 hover:shadow-xl hover:-translate-y-1 hover:shadow-emerald-500/50 transition-all duration-300 active:scale-95 border-none">
               <div>
                 <h3 id="txt-masuk" class="font-extrabold text-white text-xl drop-shadow-md">Absen Masuk</h3>
                 <p id="label-masuk" class="text-emerald-50 text-sm font-medium opacity-90 mt-1">Klik untuk upload foto</p>
@@ -87,7 +93,7 @@
               </div>
             </button>
             
-            <button id="btn-absen-pulang" onclick="triggerUpload('PULANG'); document.getElementById('label-pulang').style.display='none'; document.getElementById('icon-pulang').style.display='none';" class="p-6 bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-[2rem] text-left flex justify-between items-center shadow-lg shadow-orange-500/40 hover:shadow-xl hover:-translate-y-1 hover:shadow-orange-500/50 transition-all duration-300 active:scale-95 border-none">
+            <button id="btn-absen-pulang" onclick="triggerUpload('PULANG');" class="p-6 bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-[2rem] text-left flex justify-between items-center shadow-lg shadow-orange-500/40 hover:shadow-xl hover:-translate-y-1 hover:shadow-orange-500/50 transition-all duration-300 active:scale-95 border-none">
               <div>
                 <h3 id="txt-pulang" class="font-extrabold text-white text-xl drop-shadow-md">Absen Pulang</h3>
                 <p id="label-pulang" class="text-orange-50 text-sm font-medium opacity-90 mt-1">Klik untuk upload foto</p>
@@ -162,6 +168,28 @@
     </div>
 
   </div>
+
+  <script>
+    setInterval(function() {
+      // Bersihkan tombol masuk jika teks sudah berubah
+      let txtM = document.getElementById('txt-masuk');
+      if (txtM && txtM.innerText.trim().toLowerCase() !== 'absen masuk') {
+          let lblM = document.getElementById('label-masuk');
+          let icnM = document.getElementById('icon-masuk');
+          if(lblM) lblM.style.display = 'none';
+          if(icnM) icnM.style.display = 'none';
+      }
+      
+      // Bersihkan tombol pulang jika teks sudah berubah
+      let txtP = document.getElementById('txt-pulang');
+      if (txtP && txtP.innerText.trim().toLowerCase() !== 'absen pulang') {
+          let lblP = document.getElementById('label-pulang');
+          let icnP = document.getElementById('icon-pulang');
+          if(lblP) lblP.style.display = 'none';
+          if(icnP) icnP.style.display = 'none';
+      }
+    }, 500);
+  </script>
 
   <script src="script.js"></script>
 </body>
