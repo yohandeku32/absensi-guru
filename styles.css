@@ -1,7 +1,10 @@
 * { 
-  font-family: 'Stack Sans Notch', sans-serif; 
-  -webkit-tap-highlight-color: transparent; 
-  box-sizing: border-box; 
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+  font-variation-settings:
+    "wdth" 97.9;
 }
 
 body { 
