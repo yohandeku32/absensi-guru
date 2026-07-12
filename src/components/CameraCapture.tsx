@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Camera, UploadCloud, RefreshCw, Check, AlertTriangle, Eye } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { UploadCloud, RefreshCw, Check, FileText } from 'lucide-react';
 import { AbsenMode } from '../types';
 
 interface CameraCaptureProps {
@@ -18,52 +18,8 @@ export default function CameraCapture({
   uploadProgress
 }: CameraCaptureProps) {
   const [photo, setPhoto] = useState<string | null>(null);
-  const [useLiveCam, setUseLiveCam] = useState(false);
-  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
-  const [cameraError, setCameraError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
-
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  // Stop live camera stream
-  const stopCamera = () => {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach((track) => track.stop());
-      setCameraStream(null);
-    }
-  };
-
-  // Start live camera stream
-  const startCamera = async () => {
-    setCameraError(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' },
-        audio: false,
-      });
-      setCameraStream(stream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (err: any) {
-      console.error('Camera access error:', err);
-      setCameraError('Gagal mengakses kamera langsung. Silakan gunakan opsi File Upload / Kamera Handphone.');
-      setUseLiveCam(false);
-    }
-  };
-
-  useEffect(() => {
-    if (useLiveCam) {
-      startCamera();
-    } else {
-      stopCamera();
-    }
-    return () => {
-      stopCamera();
-    };
-  }, [useLiveCam]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,23 +56,6 @@ export default function CameraCapture({
     }
   };
 
-  const handleCaptureLive = () => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      if (context) {
-        // Match aspect ratios
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        setPhoto(dataUrl);
-        stopCamera();
-      }
-    }
-  };
-
   const handleSubmit = () => {
     if (photo) {
       onCapture(photo);
@@ -125,9 +64,6 @@ export default function CameraCapture({
 
   const handleResetPhoto = () => {
     setPhoto(null);
-    if (useLiveCam) {
-      startCamera();
-    }
   };
 
   return (
@@ -138,10 +74,10 @@ export default function CameraCapture({
         <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
           <div>
             <h3 className="font-display font-black text-slate-800 text-lg sm:text-xl">
-              Ambil Foto Absen {mode}
+              Unggah Foto Absen {mode}
             </h3>
             <p className="text-xs text-slate-400 font-medium font-sans">
-              Pastikan wajah Anda terlihat jelas untuk bukti absensi
+              Pilih foto bukti kehadiran Anda dari galeri handphone / komputer
             </p>
           </div>
           <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider font-sans ${
@@ -151,34 +87,8 @@ export default function CameraCapture({
           </span>
         </div>
 
-        {/* Tab Controls for Capture Mode */}
-        {!photo && !isSubmitting && (
-          <div className="flex border-b border-slate-100 p-2 bg-slate-100/50">
-            <button
-              onClick={() => setUseLiveCam(false)}
-              className={`flex-1 py-3 text-center rounded-xl text-xs font-bold transition-all font-sans cursor-pointer ${
-                !useLiveCam
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              📷 Upload File / Kamera HP
-            </button>
-            <button
-              onClick={() => setUseLiveCam(true)}
-              className={`flex-1 py-3 text-center rounded-xl text-xs font-bold transition-all font-sans cursor-pointer ${
-                useLiveCam
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              📹 Kamera Web Langsung
-            </button>
-          </div>
-        )}
-
         {/* Capture Body */}
-        <div className="p-6 flex-1 flex flex-col justify-center min-h-[300px]">
+        <div className="p-6 flex-1 flex flex-col justify-center min-h-[280px]">
           {isSubmitting ? (
             <div className="text-center py-12 space-y-6">
               <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
@@ -215,86 +125,46 @@ export default function CameraCapture({
               <div className="flex gap-3">
                 <button
                   onClick={handleResetPhoto}
-                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-xs font-sans cursor-pointer"
+                  className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-xs font-sans cursor-pointer"
                 >
-                  <RefreshCw className="w-4 h-4" /> Ambil Ulang
+                  <RefreshCw className="w-4 h-4" /> Ganti Foto
                 </button>
                 <button
                   onClick={handleSubmit}
-                  className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-emerald-500/10 font-sans cursor-pointer"
+                  className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-emerald-500/10 font-sans cursor-pointer"
                 >
-                  <Check className="w-4 h-4" /> Simpan Absen Ini
+                  <Check className="w-4 h-4" /> Kirim Absen Sekarang
                 </button>
               </div>
             </div>
-          ) : useLiveCam ? (
-            /* LIVE CAM ELEMENT */
-            <div className="space-y-4">
-              {cameraError ? (
-                <div className="p-5 bg-amber-50 rounded-2xl border border-amber-200 text-amber-800 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-amber-600" />
-                    <span className="font-bold text-sm">Akses Kamera Terhambat</span>
-                  </div>
-                  <p className="text-xs leading-relaxed font-sans font-medium">
-                    {cameraError}
-                  </p>
-                  <button
-                    onClick={() => setUseLiveCam(false)}
-                    className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-bold hover:bg-amber-700 transition-all font-sans cursor-pointer"
-                  >
-                    Ganti ke File/Kamera HP
-                  </button>
-                </div>
-              ) : (
-                <div className="relative rounded-2xl overflow-hidden bg-slate-900 aspect-video shadow-inner">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className="w-full h-full object-cover scale-x-[-1]"
-                  />
-                  <div className="absolute inset-x-0 bottom-4 flex justify-center">
-                    <button
-                      onClick={handleCaptureLive}
-                      className="w-14 h-14 bg-white hover:scale-115 text-slate-800 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 border-4 border-slate-300"
-                    >
-                      <Camera className="w-6 h-6" />
-                    </button>
-                  </div>
-                </div>
-              )}
-              <canvas ref={canvasRef} className="hidden" />
-            </div>
           ) : (
-            /* FILE UPLOAD / CAMERA NATIVE FALLBACK */
+            /* FILE UPLOAD / GALLERY SELECT */
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`border-3 border-dashed rounded-3xl p-8 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-4 ${
+              className={`border-3 border-dashed rounded-3xl p-10 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-4 ${
                 dragOver
                   ? 'border-emerald-500 bg-emerald-50/50 scale-[1.02]'
                   : 'border-slate-200 hover:border-emerald-400 hover:bg-slate-50/50'
               }`}
             >
-              <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
-                <UploadCloud className="w-8 h-8 text-emerald-500" />
+              <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 shadow-sm">
+                <UploadCloud className="w-8 h-8" />
               </div>
-              <div>
-                <h4 className="font-display font-extrabold text-slate-700 text-sm">
-                  Klik untuk mengambil foto / unggah file
+              <div className="space-y-1">
+                <h4 className="font-display font-extrabold text-slate-800 text-sm">
+                  Pilih Foto dari Galeri
                 </h4>
-                <p className="text-xs text-slate-400 mt-1 font-sans font-medium max-w-[240px] mx-auto">
-                  Jika dibuka di HP, kamera handphone Anda akan otomatis terbuka untuk berswafoto.
+                <p className="text-xs text-slate-400 font-sans font-medium max-w-[280px] mx-auto leading-relaxed">
+                  Sentuh area ini untuk membuka album foto / galeri handphone Anda. Dukungan format gambar JPEG, PNG, atau WebP.
                 </p>
               </div>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                capture="user"
                 className="hidden"
                 onChange={handleFileChange}
               />
