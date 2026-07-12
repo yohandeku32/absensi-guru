@@ -1,2 +1,0 @@
-# absensi-guru
-Absen Guru
